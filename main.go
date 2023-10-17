@@ -4,12 +4,33 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
+	"path"
 	"strconv"
 	"strings"
+
+	"github.com/anacrolix/torrent"
 )
 
 func main() {
+	c, _ := torrent.NewClient(nil)
+	defer c.Close()
+
+	var f *torrent.File
+	go func() {
+		t, err := c.AddMagnet("...")
+		if err != nil {
+			panic(err)
+		}
+		<-t.GotInfo()
+
+		for _, file := range t.Files() {
+			ext := path.Ext(file.Path())
+			if ext == ".mp4" {
+				f = file
+			}
+		}
+	}()
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" && r.URL.Path == "/" {
 			http.ServeFile(w, r, "index.html")
@@ -18,16 +39,9 @@ func main() {
 	})
 
 	http.HandleFunc("/video", func(w http.ResponseWriter, r *http.Request) {
-		f, err := os.Open("video.mp4")
-		if err != nil {
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-		defer f.Close()
 
-		s, err := f.Stat()
-		if err != nil {
-			http.Error(w, "", http.StatusInternalServerError)
+		if f == nil {
+			http.Error(w, "", http.StatusNotFound)
 			return
 		}
 
@@ -41,26 +55,27 @@ func main() {
 		if len(rg) == 2 {
 			start, _ = strconv.ParseInt(rg[0], 10, 64)
 		}
-		if start >= s.Size() {
+		if start >= f.Length() {
 			http.Error(w, "", http.StatusBadRequest)
 			return
 		}
 
 		end := start + chunkSize - 1
-		if end > s.Size()-1 {
-			end = s.Size() - 1
+		if end > f.Length()-1 {
+			end = f.Length() - 1
 		}
 
 		contentLen := end - start + 1
 
-		_, err = f.Seek(start, io.SeekStart)
+		reader := f.NewReader()
+		_, err := reader.Seek(start, io.SeekStart)
 		if err != nil {
 			http.Error(w, "", http.StatusInternalServerError)
 			return
 		}
 
 		buf := make([]byte, contentLen)
-		_, err = io.ReadFull(f, buf)
+		_, err = io.ReadFull(reader, buf)
 		if err != nil && err != io.ErrUnexpectedEOF {
 			http.Error(w, "", http.StatusInternalServerError)
 			return
@@ -69,7 +84,7 @@ func main() {
 		w.Header().Set("Content-Type", "video/mp4")
 		w.Header().Set("Accept-Ranges", "bytes")
 		w.Header().Set("Content-Length", fmt.Sprint(len(buf)))
-		w.Header().Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, end, s.Size()))
+		w.Header().Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, end, f.Length()))
 		w.WriteHeader(206)
 
 		w.Write(buf)
