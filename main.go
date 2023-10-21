@@ -32,6 +32,10 @@ func main() {
 		}
 	})
 
+	http.HandleFunc("/sub", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "sub.vtt")
+	})
+
 	http.HandleFunc("/video", func(w http.ResponseWriter, r *http.Request) {
 		<-t.GotInfo()
 		var tf *torrent.File
