@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -30,6 +31,7 @@ type Movie struct {
 	ID        string
 	Title     string
 	PosterURL string
+	Overview  string
 }
 
 func (cl Client) FindMovie(id string) (mov Movie, err error) {
@@ -46,17 +48,20 @@ func (cl Client) FindMovie(id string) (mov Movie, err error) {
 	}
 	defer resp.Body.Close()
 
-	mov.ID = id
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
 		return
 	}
 
-	titleEl := doc.Find(".title h2 a").First()
-	mov.Title = titleEl.Text()
+	headerEl := doc.Find("#original_header").First()
 
-	posterEl := doc.Find("#original_header img.poster").First()
-	mov.PosterURL = cl.BaseURL + posterEl.AttrOr("src", "")
+	mov.ID = id
+	mov.Title = headerEl.Find("h2 a").First().Text()
+
+	img := headerEl.Find("img.poster").First()
+	mov.PosterURL = cl.BaseURL + img.AttrOr("src", "")
+
+	mov.Overview = strings.TrimSpace(headerEl.Find(".overview").Text())
 
 	return
 }

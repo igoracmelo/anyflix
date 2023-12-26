@@ -24,16 +24,19 @@ func TestFindMovie(t *testing.T) {
 		ID        string
 		Title     string
 		PosterURL string
+		Overview  string
 	}{
 		ID:        "8871",
 		Title:     "O Grinch",
 		PosterURL: "/poster.png",
+		Overview:  "The Grinch decides to rob Whoville of Christmas",
 	}
 
 	want := Movie{
 		ID:        tmplData.ID,
 		Title:     tmplData.Title,
 		PosterURL: cl.BaseURL + tmplData.PosterURL,
+		Overview:  tmplData.Overview,
 	}
 
 	reached := false
