@@ -12,10 +12,10 @@ type Client struct {
 }
 
 type Movie struct {
-	ID    int
+	ID    string
 	Title string
 }
 
-func (cl Client) FindMovie(id int) (mov Movie, err error) {
+func (cl Client) FindMovie(id string) (mov Movie, err error) {
 	return
 }
