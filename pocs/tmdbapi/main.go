@@ -1,6 +1,10 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/PuerkitoBio/goquery"
+)
 
 func main() {
 
@@ -31,6 +35,15 @@ func (cl Client) FindMovie(id string) (mov Movie, err error) {
 		return
 	}
 	defer resp.Body.Close()
+
+	mov.ID = id
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return
+	}
+
+	titleEl := doc.Find(".title h2 a").First()
+	mov.Title = titleEl.Text()
 
 	return
 }
