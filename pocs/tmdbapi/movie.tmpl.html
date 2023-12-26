@@ -152,10 +152,12 @@
                       </div>
 
                       <ol class="people no_image">
+                        {{ range .Directors }}
                         <li class="profile">
-                          <p><a href="/person/6159-ron-howard">Ron Howard</a></p>
+                          <p><a href="/person/6159-someone">{{ . }}</a></p>
                           <p class="character">Director</p>
                         </li>
+                        {{ end }}
                         <li class="profile">
                           <p><a href="/person/12100-jeffrey-price">Jeffrey Price</a></p>
                           <p class="character">Screenplay</p>

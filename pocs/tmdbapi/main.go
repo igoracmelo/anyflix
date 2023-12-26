@@ -32,6 +32,7 @@ type Movie struct {
 	Title     string
 	PosterURL string
 	Overview  string
+	Directors []string
 }
 
 func (cl Client) FindMovie(id string) (mov Movie, err error) {
@@ -62,6 +63,12 @@ func (cl Client) FindMovie(id string) (mov Movie, err error) {
 	mov.PosterURL = cl.BaseURL + img.AttrOr("src", "")
 
 	mov.Overview = strings.TrimSpace(headerEl.Find(".overview").Text())
+
+	headerEl.Find(".profile").Each(func(i int, s *goquery.Selection) {
+		if s.Find(".character").First().Text() == "Director" {
+			mov.Directors = append(mov.Directors, s.Find("a").First().Text())
+		}
+	})
 
 	return
 }
