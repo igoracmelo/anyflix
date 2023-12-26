@@ -1,18 +1,39 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
-	"net/http/httptest"
+	"net/url"
 	"reflect"
+	"strings"
 	"testing"
 )
 
 func TestFindMovie(t *testing.T) {
+	u, err := url.Parse("http://localhost:12345")
+	assertEqual(t, nil, err)
+
+	cl := Client{
+		HTTP:    &http.Client{},
+		BaseURL: u.String(),
+	}
+
+	tmplData := struct {
+		ID        string
+		Title     string
+		PosterURL string
+	}{
+		ID:        "8871",
+		Title:     "O Grinch",
+		PosterURL: "/poster.png",
+	}
+
 	want := Movie{
-		ID:    "8871",
-		Title: "O Grinch",
+		ID:        tmplData.ID,
+		Title:     tmplData.Title,
+		PosterURL: cl.BaseURL + tmplData.PosterURL,
 	}
 
 	reached := false
@@ -21,17 +42,12 @@ func TestFindMovie(t *testing.T) {
 		assertEqual(t, "/movie/"+want.ID, r.URL.Path)
 		assertEqual(t, DefaultUserAgent, r.Header.Get("User-Agent"))
 
-		err := template.Must(template.ParseFiles("movie.tmpl.html")).Execute(w, want)
+		err := template.Must(template.ParseFiles("movie.tmpl.html")).Execute(w, tmplData)
 		assertEqual(t, nil, err)
 	}
 
-	server := httptest.NewServer(f)
+	server := newServer(t, u, f)
 	defer server.Close()
-
-	cl := Client{
-		HTTP:    &http.Client{},
-		BaseURL: server.URL,
-	}
 
 	got, err := cl.FindMovie(want.ID)
 	assertEqual(t, nil, err)
@@ -55,4 +71,38 @@ func assertEqual(t *testing.T, want, got any) {
 func assertDeepEqual(t *testing.T, want, got any) {
 	t.Helper()
 	assert(t, reflect.DeepEqual(want, got), fmt.Sprintf("want:\n%#v\n\ngot:\n%#v", want, got))
+}
+
+func newServer(t *testing.T, u *url.URL, f http.HandlerFunc) *http.Server {
+	t.Helper()
+
+	started := false
+	var handler http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+		if !started {
+			started = true
+			return
+		}
+
+		f(w, r)
+	}
+
+	server := &http.Server{
+		Addr:    u.Host,
+		Handler: handler,
+	}
+
+	go func() {
+		err := server.ListenAndServe()
+		assert(t, errors.Is(err, http.ErrServerClosed), err)
+	}()
+
+	for {
+		_, err := http.Get(u.String())
+		if err == nil {
+			break
+		}
+		assert(t, strings.Contains(err.Error(), "connection refused"), err)
+	}
+
+	return server
 }

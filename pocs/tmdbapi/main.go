@@ -27,8 +27,9 @@ func NewClient() Client {
 }
 
 type Movie struct {
-	ID    string
-	Title string
+	ID        string
+	Title     string
+	PosterURL string
 }
 
 func (cl Client) FindMovie(id string) (mov Movie, err error) {
@@ -53,6 +54,9 @@ func (cl Client) FindMovie(id string) (mov Movie, err error) {
 
 	titleEl := doc.Find(".title h2 a").First()
 	mov.Title = titleEl.Text()
+
+	posterEl := doc.Find("#original_header img.poster").First()
+	mov.PosterURL = cl.BaseURL + posterEl.AttrOr("src", "")
 
 	return
 }
