@@ -18,6 +18,7 @@ func TestFindMovie(t *testing.T) {
 	var f http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 		reached = true
 		assertEqual(t, "/movie/"+want.ID, r.URL.Path)
+		assertEqual(t, DefaultUserAgent, r.Header.Get("User-Agent"))
 	}
 
 	server := httptest.NewServer(f)
@@ -41,6 +42,7 @@ func assert(t *testing.T, ok bool, msg any) {
 }
 
 func assertEqual(t *testing.T, want, got any) {
-	assert(t, want == got, "")
+	t.Helper()
+	assert(t, want == got, fmt.Sprintf("want: '%v', got: '%v'", want, got))
 }
 
