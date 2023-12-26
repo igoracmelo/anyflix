@@ -29,6 +29,7 @@ func TestFindMovie(t *testing.T) {
 	defer server.Close()
 
 	cl := Client{
+		HTTP:    &http.Client{},
 		BaseURL: server.URL,
 	}
 
