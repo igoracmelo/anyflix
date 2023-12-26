@@ -9,7 +9,6 @@ import (
 )
 
 func TestFindMovie(t *testing.T) {
-
 	want := Movie{
 		ID: "8871",
 	}
@@ -29,7 +28,7 @@ func TestFindMovie(t *testing.T) {
 	}
 
 	_, err := cl.FindMovie(want.ID)
-	assert(t, err == nil, err)
+	assertEqual(t, nil, err)
 
 	assert(t, reached, "server not reached")
 }

@@ -19,7 +19,14 @@ type Movie struct {
 }
 
 func (cl Client) FindMovie(id string) (mov Movie, err error) {
-	resp, err := cl.HTTP.Get(cl.BaseURL + "/movie/" + id)
+	req, err := http.NewRequest("GET", cl.BaseURL+"/movie/"+id, nil)
+	if err != nil {
+		return
+	}
+
+	req.Header.Set("User-Agent", DefaultUserAgent)
+
+	resp, err := cl.HTTP.Do(req)
 	if err != nil {
 		return
 	}
