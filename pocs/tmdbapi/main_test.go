@@ -9,7 +9,6 @@ import (
 )
 
 func TestFindMovie(t *testing.T) {
-	cl := Client{}
 
 	want := Movie{
 		ID: "8871",
@@ -23,6 +22,10 @@ func TestFindMovie(t *testing.T) {
 
 	server := httptest.NewServer(f)
 	defer server.Close()
+
+	cl := Client{
+		BaseURL: server.URL,
+	}
 
 	_, err := cl.FindMovie(want.ID)
 	assert(t, err == nil, err)
