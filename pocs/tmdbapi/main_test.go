@@ -23,6 +23,7 @@ func TestFindMovie(t *testing.T) {
 	tmplData := struct {
 		ID          string
 		Title       string
+		ReleaseYear int
 		PosterURL   string
 		BackdropURL string
 		Overview    string
@@ -30,6 +31,7 @@ func TestFindMovie(t *testing.T) {
 	}{
 		ID:          "8871",
 		Title:       "O Grinch",
+		ReleaseYear: 2000,
 		PosterURL:   "/poster.png",
 		BackdropURL: "/t/p/replaceme/backdrop.png",
 		Overview:    "The Grinch decides to rob Whoville of Christmas",
@@ -39,6 +41,7 @@ func TestFindMovie(t *testing.T) {
 	want := Movie{
 		ID:          tmplData.ID,
 		Title:       tmplData.Title,
+		ReleaseYear: 2000,
 		PosterURL:   cl.BaseURL + tmplData.PosterURL,
 		BackdropURL: cl.BaseURL + "/t/p/original/backdrop.png",
 		Overview:    tmplData.Overview,

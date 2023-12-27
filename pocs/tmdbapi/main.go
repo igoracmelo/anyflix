@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -98,6 +99,7 @@ func NewClient() Client {
 type Movie struct {
 	ID          string
 	Title       string
+	ReleaseYear int
 	PosterURL   string
 	BackdropURL string
 	Overview    string
@@ -139,6 +141,13 @@ func (cl Client) FindMovie(id string) (mov Movie, err error) {
 			mov.Directors = append(mov.Directors, s.Find("a").First().Text())
 		}
 	})
+
+	sYear := headerEl.Find(".release_date").Text()
+	sYear = strings.Trim(sYear, "()")
+	mov.ReleaseYear, err = strconv.Atoi(sYear)
+	if err != nil {
+		return
+	}
 
 	style := doc.Find("#main style").First().Text()
 
