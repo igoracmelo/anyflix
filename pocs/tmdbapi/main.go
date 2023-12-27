@@ -62,7 +62,7 @@ func (cl Client) FindMovie(id string) (mov Movie, err error) {
 	mov.Title = headerEl.Find("h2 a").First().Text()
 
 	img := headerEl.Find("img.poster").First()
-	mov.PosterURL = cl.BaseURL + img.AttrOr("src", "")
+	mov.PosterURL = cl.BaseURL + img.AttrOr("data-src", "")
 
 	mov.Overview = strings.TrimSpace(headerEl.Find(".overview").Text())
 
