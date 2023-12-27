@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -28,11 +29,12 @@ func NewClient() Client {
 }
 
 type Movie struct {
-	ID        string
-	Title     string
-	PosterURL string
-	Overview  string
-	Directors []string
+	ID          string
+	Title       string
+	PosterURL   string
+	BackdropURL string
+	Overview    string
+	Directors   []string
 }
 
 func (cl Client) FindMovie(id string) (mov Movie, err error) {
@@ -69,6 +71,20 @@ func (cl Client) FindMovie(id string) (mov Movie, err error) {
 			mov.Directors = append(mov.Directors, s.Find("a").First().Text())
 		}
 	})
+
+	style := doc.Find("#main style").First().Text()
+
+	re := regexp.MustCompile(`div\.header\.large\.first \{(.*|\n)+\}`)
+	headerStyle := re.FindString(style)
+
+	re = regexp.MustCompile(`background-image: url\('(.*)'\)`)
+	m := re.FindStringSubmatch(headerStyle)
+	if len(m) >= 2 {
+		url := m[1]
+		re = regexp.MustCompile(`/t/p/.*?/`)
+		mov.BackdropURL = re.ReplaceAllString(url, "/t/p/original/")
+		mov.BackdropURL = cl.BaseURL + mov.BackdropURL
+	}
 
 	return
 }

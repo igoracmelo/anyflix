@@ -21,25 +21,28 @@ func TestFindMovie(t *testing.T) {
 	}
 
 	tmplData := struct {
-		ID        string
-		Title     string
-		PosterURL string
-		Overview  string
-		Directors []string
+		ID          string
+		Title       string
+		PosterURL   string
+		BackdropURL string
+		Overview    string
+		Directors   []string
 	}{
-		ID:        "8871",
-		Title:     "O Grinch",
-		PosterURL: "/poster.png",
-		Overview:  "The Grinch decides to rob Whoville of Christmas",
-		Directors: []string{"Ron Howard"},
+		ID:          "8871",
+		Title:       "O Grinch",
+		PosterURL:   "/poster.png",
+		BackdropURL: "/t/p/replaceme/backdrop.png",
+		Overview:    "The Grinch decides to rob Whoville of Christmas",
+		Directors:   []string{"Ron Howard"},
 	}
 
 	want := Movie{
-		ID:        tmplData.ID,
-		Title:     tmplData.Title,
-		PosterURL: cl.BaseURL + tmplData.PosterURL,
-		Overview:  tmplData.Overview,
-		Directors: []string{"Ron Howard"},
+		ID:          tmplData.ID,
+		Title:       tmplData.Title,
+		PosterURL:   cl.BaseURL + tmplData.PosterURL,
+		BackdropURL: cl.BaseURL + "/t/p/original/backdrop.png",
+		Overview:    tmplData.Overview,
+		Directors:   []string{"Ron Howard"},
 	}
 
 	reached := false
