@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Content.Title }}</title>
+</head>
+<body>
+    <style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: Arial;
+    }
+    .container {
+        padding: 50px;
+        color: white;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        background-image: linear-gradient(45deg, #3007, #0037), url('{{ .Content.BackdropURL }}');
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center center;
+    }
+    .left {
+        flex: 2 1 500px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .left .title {
+        padding: 0 0 30px 0;
+    }
+    .directors {
+        display: flex;
+        gap: 15px;
+    }
+    .director {
+        padding: 5px 15px;
+        background-color: #0003;
+        border-radius: 100px;
+    }
+    .right {
+        /* flex-grow: 1; */
+        /* flex-basis: 400px; */
+        flex: 1 0 300px;
+        background-color: #000c;
+        border-radius: 10px;
+        padding: 25px;
+    }
+    .sources {
+        padding: 8px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .source {
+        display: flex;
+        /* flex-direction: column; */
+        justify-content: space-between;
+        /* gap: 10px; */
+        cursor: pointer;
+        position: relative;
+        padding: 20px 20px;
+        background-color: #fff1;
+    }
+    .source .play {
+        display: none;
+        position: absolute;
+        top: 50%;
+        right: 0;
+        transform: translate(30%, -50%);
+        padding-left: 3px;
+        width: 40px;
+        height: 40px;
+        place-items: center;
+        font-family: serif;
+        font-weight: bold;
+        font-size: 30px;
+        /* padding: 20px; */
+        background-color: #0f0;
+        border-radius: 50%;
+    }
+    .source:hover {
+        background-color: #fff2;
+    }
+    .source:hover .play {
+        display: grid;
+    }
+    .source .languages {
+        display: flex;
+        gap: 10px;
+    }
+    </style>
+
+    <div class="container">
+        <div class="left">
+            {{ with .Content }}
+            <h1 class="title">{{ .Title }}</h1>
+
+            <p>{{ .Overview }}</p>
+            <div>Directors:</div>
+            <div class="directors">
+                {{ range .Directors }}
+                <div class="director">{{ . }}</div>
+                {{ end }}
+            </div>
+            {{ end }}
+        </div>
+        <div class="right">
+            Select option
+            <div class="sources">
+                {{ range .Sources }}
+                <div class="source" title="{{ .Title }}">
+                    <div class="resolution">{{ .Resolution }}</div>
+                    <div class="languages">
+                        {{ range .Languages }}
+                        <!-- <div class="language">{{ . }}</div> -->
+                        <img src="https://flagcdn.com/{{.}}.svg" height="12" alt="Ukraine">
+                        {{ end }}
+                    </div>
+                    <div class="seeders">{{ .Seeders }} people</div>
+                    <div class="play">></div>
+                </div>
+                {{ end}}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
