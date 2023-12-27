@@ -34,6 +34,9 @@
     }
     .left .title {
         padding: 0 0 30px 0;
+        span:nth-child(2) {
+            font-weight: normal;
+        }
     }
     .directors {
         display: flex;
@@ -100,7 +103,12 @@
     <div class="container">
         <div class="left">
             {{ with .Content }}
-            <h1 class="title">{{ .Title }}</h1>
+            <h1 class="title">
+                <span>{{ .Title }}</span>
+                {{ if ne .ReleaseYear 0}}
+                <span>({{ .ReleaseYear }})</span>
+                {{ end }}
+            </h1>
 
             <p>{{ .Overview }}</p>
             <div>Directors:</div>
