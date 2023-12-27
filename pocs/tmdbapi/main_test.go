@@ -48,7 +48,7 @@ func TestFindMovie(t *testing.T) {
 		assertEqual(t, "/movie/"+want.ID, r.URL.Path)
 		assertEqual(t, DefaultUserAgent, r.Header.Get("User-Agent"))
 
-		err := template.Must(template.ParseFiles("movie.tmpl.html")).Execute(w, tmplData)
+		err := template.Must(template.ParseFiles("testdata/movie.tmpl.html")).Execute(w, tmplData)
 		assertEqual(t, nil, err)
 	}
 
