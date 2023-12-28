@@ -60,3 +60,13 @@ func NewServer(t *testing.T, u *url.URL, f http.HandlerFunc) *http.Server {
 
 	return server
 }
+
+type RoundTripFunc func(req *http.Request) *http.Response
+
+var _ http.RoundTripper = (RoundTripFunc)(nil)
+
+// RoundTrip implements http.RoundTripper.
+func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	resp := f(req)
+	return resp, nil
+}
