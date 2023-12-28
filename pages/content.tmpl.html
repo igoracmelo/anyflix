@@ -54,7 +54,17 @@
         background-color: #000c;
         border-radius: 10px;
         padding: 25px;
+        height: 80vh;
+        overflow-y: scroll;
+
+        /* gecko browsers (firefox) hide scrollbar */
+        scrollbar-width: none;
     }
+    /* chrome: hide horrible browser scrollbar */
+    .right::-webkit-scrollbar {
+        display: none;
+    }
+
     .sources {
         padding: 8px 0;
         display: flex;
@@ -124,11 +134,10 @@
             <div class="sources">
                 {{ range .Sources }}
                 <div class="source" title="{{ .Title }}">
-                    <div class="resolution">{{ .Resolution }}</div>
+                    <div class="resolution">{{ .Resolution }}p</div>
                     <div class="languages">
                         {{ range .Languages }}
-                        <!-- <div class="language">{{ . }}</div> -->
-                        <img src="https://flagcdn.com/{{.}}.svg" height="12" alt="Ukraine">
+                        <img src="https://flagcdn.com/{{.}}.svg" height="12" alt="{{.}}">
                         {{ end }}
                     </div>
                     <div class="seeders">{{ .Seeders }} people</div>

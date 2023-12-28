@@ -39,6 +39,7 @@ func TestSearch(t *testing.T) {
 	tmplData := struct {
 		Sources []source
 	}{
+		// sorted by resolution than seeders
 		Sources: []source{
 			{
 				Href:    "/source1",
@@ -48,18 +49,18 @@ func TestSearch(t *testing.T) {
 				Seeders: 123,
 			},
 			{
-				Href:    "/source2",
-				Title:   "title2",
-				Genres:  "Comedy",
-				HSize:   "1.5 GB",
-				Seeders: 80,
-			},
-			{
 				Href:    "/source3",
 				Title:   "title3",
 				Genres:  "Action,Science Fiction",
 				HSize:   "3.3 GB",
 				Seeders: 100,
+			},
+			{
+				Href:    "/source2",
+				Title:   "title2",
+				Genres:  "Comedy",
+				HSize:   "1.5 GB",
+				Seeders: 80,
 			},
 		},
 	}
