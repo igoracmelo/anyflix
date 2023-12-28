@@ -1,4 +1,4 @@
-package main
+package tmdbapi
 
 import (
 	"html/template"
@@ -101,10 +101,12 @@ type Movie struct {
 	ID          string
 	Title       string
 	ReleaseYear int
-	PosterURL   string
-	BackdropURL string
-	Overview    string
-	Directors   []string
+	// TODO
+	RatingPercent int
+	PosterURL     string
+	BackdropURL   string
+	Overview      string
+	Directors     []string
 }
 
 func (cl Client) FindMovie(id string) (mov Movie, err error) {

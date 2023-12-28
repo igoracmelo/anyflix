@@ -1,4 +1,4 @@
-package main
+package tmdbapi
 
 import (
 	th "anyflix/testhelper"
