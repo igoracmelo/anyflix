@@ -30,9 +30,13 @@ type Result struct {
 	HSize      string
 	Resolution int
 	Seeders    int
+	MagnetLink string
+	Languages  []string
+}
 
-	// TODO
-	Languages []string
+type TorrentDetails struct {
+	MagnetLink string
+	Language   string
 }
 
 func (cl Client) Search(search, category, order, by string) (res []Result, err error) {
@@ -73,6 +77,8 @@ func (cl Client) Search(search, category, order, by string) (res []Result, err e
 		"SD":     480,
 	}
 
+	count := 0
+	ch := make(chan Result, 0)
 	doc.Find("tr.table2ta").Each(func(i int, s *goquery.Selection) {
 		r := Result{}
 
@@ -95,14 +101,55 @@ func (cl Client) Search(search, category, order, by string) (res []Result, err e
 			}
 		}
 
-		res = append(res, r)
+		count++
+		go func() {
+			details, err := cl.TorrentDetails(r.URL)
+			if err != nil {
+				log.Print(err)
+				return
+			}
+
+			r.MagnetLink = details.MagnetLink
+			if details.Language != "" {
+				r.Languages = append(r.Languages, details.Language)
+			}
+			ch <- r
+		}()
+
 	})
+
+	for i := 0; i < count; i++ {
+		res = append(res, <-ch)
+	}
 
 	sort.Slice(res, func(i, j int) bool {
 		if res[i].Resolution == res[j].Resolution {
 			return res[i].Seeders > res[j].Seeders
 		}
 		return res[i].Resolution > res[j].Resolution
+	})
+
+	return
+}
+
+func (cl Client) TorrentDetails(url string) (details TorrentDetails, err error) {
+	resp, err := cl.HTTP.Get(url)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return
+	}
+
+	details.MagnetLink = doc.Find("a[href^=magnet]:nth-child(2)").AttrOr("href", "")
+
+	doc.Find("tr").Each(func(i int, s *goquery.Selection) {
+		if s.Find("td").First().Text() == "Language:" {
+			details.Language = s.Find("td:nth-child(2)").Text()
+		}
 	})
 
 	return
