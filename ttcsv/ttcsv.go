@@ -2,6 +2,7 @@ package ttcsv
 
 import (
 	"anyflix/ttsearch"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -29,6 +30,19 @@ func (cl Client) Search(params ttsearch.SearchParams) (res []ttsearch.Result, er
 	q.Set("size", fmt.Sprint(params.Size))
 
 	req, _ := http.NewRequest("GET", cl.BaseURL+"/search?"+q.Encode(), nil)
-	_, err = cl.HTTP.Do(req)
+	resp, err := cl.HTTP.Do(req)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	var resultsMap []map[string]any
+	err = json.NewDecoder(resp.Body).Decode(&resultsMap)
+	if err != nil {
+		return
+	}
+
+	res = make([]ttsearch.Result, len(resultsMap))
+
 	return
 }

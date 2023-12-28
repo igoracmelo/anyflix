@@ -4,7 +4,9 @@ import (
 	th "anyflix/testhelper"
 	"anyflix/ttsearch"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -29,10 +31,23 @@ func TestSearch(t *testing.T) {
 		th.AssertEqual(t, fmt.Sprint(params.Page), q.Get("page"))
 		th.AssertEqual(t, fmt.Sprint(params.Size), q.Get("size"))
 
-		return &http.Response{}
+		return &http.Response{
+			Body: io.NopCloser(strings.NewReader(`
+			[{
+				"infohash": "dd8255ecdc7ca55fb0bbf81323d87062db1f6d1c",
+				"name": "Big Buck Bunny",
+				"size_bytes": 276445467,
+				"created_unix": 1701325597,
+				"seeders": 95,
+				"leechers": 7,
+				"completed": 12768,
+				"scraped_date": 1701325601
+			}]`)),
+		}
 	})
 
-	_, err := cl.Search(params)
+	res, err := cl.Search(params)
 	th.Assert(t, reached, "server not reached")
 	th.AssertEqual(t, nil, err)
+	th.AssertEqual(t, 1, len(res))
 }
