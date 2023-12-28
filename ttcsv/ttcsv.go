@@ -3,6 +3,7 @@ package ttcsv
 import (
 	"anyflix/ttsearch"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -35,6 +36,12 @@ func (cl Client) Search(params ttsearch.SearchParams) (res []ttsearch.Result, er
 		return
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
+		// TODO
+		err = errors.New("request failed")
+		return
+	}
 
 	var resMap []map[string]any
 	err = json.NewDecoder(resp.Body).Decode(&resMap)
