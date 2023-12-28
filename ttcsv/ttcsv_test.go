@@ -14,6 +14,7 @@ func TestSearch(t *testing.T) {
 	reached := false
 	httpClient.Transport = th.RoundTripFunc(func(req *http.Request) *http.Response {
 		reached = true
+		th.AssertEqual(t, "torrents-csv.com", req.URL.Host)
 		th.AssertEqual(t, "/service/search", req.URL.Path)
 		return &http.Response{}
 	})
