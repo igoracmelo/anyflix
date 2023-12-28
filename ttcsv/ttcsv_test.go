@@ -14,11 +14,13 @@ func TestSearch(t *testing.T) {
 	reached := false
 	httpClient.Transport = th.RoundTripFunc(func(req *http.Request) *http.Response {
 		reached = true
+		th.AssertEqual(t, "/service/search", req.URL.Path)
 		return &http.Response{}
 	})
 
-	_, _ = cl.Search(ttsearch.SearchParams{
+	_, err := cl.Search(ttsearch.SearchParams{
 		Query: "south park",
 	})
 	th.Assert(t, reached, "server not reached")
+	th.AssertEqual(t, nil, err)
 }
