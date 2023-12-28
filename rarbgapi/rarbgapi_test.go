@@ -1,4 +1,4 @@
-package main
+package rarbgapi
 
 import (
 	th "anyflix/testhelper"
@@ -84,7 +84,7 @@ func TestSearch(t *testing.T) {
 			th.AssertEqual(t, v, q.Get(k))
 		}
 
-		err := template.Must(template.ParseFiles("search.tmpl.html")).Execute(w, tmplData)
+		err := template.Must(template.ParseFiles("testdata/search.tmpl.html")).Execute(w, tmplData)
 		th.AssertEqual(t, nil, err)
 	})
 	defer server.Close()
