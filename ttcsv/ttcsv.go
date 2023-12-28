@@ -21,6 +21,6 @@ func NewClient(httpClient *http.Client) Client {
 
 // Search implements ttsearch.Searcher.
 func (cl Client) Search(params ttsearch.SearchParams) (res []ttsearch.Result, err error) {
-	_, err = cl.HTTP.Get("/")
+	_, err = cl.HTTP.Get("/service/search")
 	return
 }
