@@ -4,14 +4,17 @@ type SearchParams struct {
 	Query     string
 	Sort      string
 	Direction string
-	Size      int
 	Page      int
+	Size      int
 }
 
 type Result struct {
 	MagnetLink string
 	InfoHash   string
-	Title      string
+	Name       string
+	Seeders    int
+	Leechers   int
+	SizeBytes  int
 }
 
 type Searcher interface {

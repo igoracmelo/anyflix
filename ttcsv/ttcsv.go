@@ -36,13 +36,22 @@ func (cl Client) Search(params ttsearch.SearchParams) (res []ttsearch.Result, er
 	}
 	defer resp.Body.Close()
 
-	var resultsMap []map[string]any
-	err = json.NewDecoder(resp.Body).Decode(&resultsMap)
+	var resMap []map[string]any
+	err = json.NewDecoder(resp.Body).Decode(&resMap)
 	if err != nil {
 		return
 	}
 
-	res = make([]ttsearch.Result, len(resultsMap))
+	res = make([]ttsearch.Result, len(resMap))
+	for i := 0; i < len(res); i++ {
+		res[i] = ttsearch.Result{
+			InfoHash:  resMap[i]["infohash"].(string),
+			Name:      resMap[i]["name"].(string),
+			Seeders:   int(resMap[i]["seeders"].(float64)),
+			Leechers:  int(resMap[i]["leechers"].(float64)),
+			SizeBytes: int(resMap[i]["size_bytes"].(float64)),
+		}
+	}
 
 	return
 }

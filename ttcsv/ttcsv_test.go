@@ -50,4 +50,13 @@ func TestSearch(t *testing.T) {
 	th.Assert(t, reached, "server not reached")
 	th.AssertEqual(t, nil, err)
 	th.AssertEqual(t, 1, len(res))
+	th.AssertDeepEqual(t, []ttsearch.Result{
+		{
+			InfoHash:  "dd8255ecdc7ca55fb0bbf81323d87062db1f6d1c",
+			Name:      "Big Buck Bunny",
+			SizeBytes: 276445467,
+			Seeders:   95,
+			Leechers:  7,
+		},
+	}, res)
 }
