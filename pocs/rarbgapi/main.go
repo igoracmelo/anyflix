@@ -1,8 +1,13 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"net/url"
+	"strconv"
+	"strings"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 func main() {
@@ -47,6 +52,29 @@ func (cl Client) Search(search, category, order, by string) (res []Result, err e
 		return
 	}
 	defer resp.Body.Close()
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return
+	}
+
+	doc.Find("tr.table2ta").Each(func(i int, s *goquery.Selection) {
+		r := Result{}
+
+		var err error
+		a := s.Find("td:nth-child(2) > a").First()
+		r.Title = a.Text()
+		r.URL = cl.BaseURL + a.AttrOr("href", "")
+		r.HSize = s.Find("td:nth-child(5)").Text()
+		r.Seeders, err = strconv.Atoi(strings.TrimSpace(s.Find("td:nth-child(6)").Text()))
+
+		if err != nil {
+			log.Print(err)
+			return
+		}
+
+		res = append(res, r)
+	})
 
 	return
 }
