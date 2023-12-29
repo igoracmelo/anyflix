@@ -37,6 +37,15 @@ func main() {
 	var searcher torrents.Searcher = ttcsv.NewClient(http.DefaultClient)
 	tmdb := tmdbapi.NewClient(http.DefaultClient)
 
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			http.Redirect(w, r, "/movies", http.StatusTemporaryRedirect)
+			return
+		}
+
+		http.NotFound(w, r)
+	})
+
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets/"))))
 
 	http.HandleFunc("/movies", func(w http.ResponseWriter, r *http.Request) {
