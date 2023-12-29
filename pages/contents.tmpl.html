@@ -4,7 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>
+    {{ if ne .Query "" }}
+    "{{ .Query }}" - Search movies
+    {{ else }}
+    Movies
+    {{ end }}
+    </title>
 </head>
 
 <body>
@@ -12,9 +18,12 @@
     <style>
         .container {
             color: white;
-            width: 100%;
+            width: 100vw;
+            height: 100vh;
+            overflow-y: scroll;
             padding: 25px;
-            background-color: #203;
+            background-color: #113;
+            flex: 1;
             display: flex;
             flex-direction: column;
             gap: 20px;
@@ -37,7 +46,8 @@
         .contents {
             width: 100%;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            /* grid-template-columns: repeat(5, 300px); */
             grid-gap: 20px;
         }
         .content {
@@ -52,7 +62,8 @@
             font-weight: bold;
             padding: 10px;
         }
-        .content img {
+        .content_img {
+            border: 2px solid #0001;
             background-color: #ccc;
             width: 100%;
             flex: 1;
@@ -62,13 +73,18 @@
     <div class="container">
         <h1>Movies</h1>
         <form action="/movies">
-            <input type="text" class="search" name="term" placeholder="Search">
+            <input type="text" class="search" name="query" placeholder="Search" value="{{ .Query }}">
         </form>
 
         <div class="contents">
             {{ range .Movies }}
             <a class="content" href="/movie?id={{ .ID }}">
-                <img src="{{ .PosterURL }}" alt="{{ .Title }}">
+                {{ if ne .PosterURL "" }}
+                <img class="content_img" src="{{ .PosterURL }}" alt="{{ .Title }}">
+                {{ else }}
+                <img class="content_img" src="https://placehold.co/240x320?text=No%20cover" alt="{{ .Title }}">
+                {{ end}}
+
                 <div class="content_title">{{ .Title }}</div>
                 <div>{{ .ReleaseDate }}</div>
                 <!-- <div>{{ .RatingPercent }}%</div> -->

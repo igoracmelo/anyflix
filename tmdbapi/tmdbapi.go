@@ -5,6 +5,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -80,7 +81,10 @@ func (cl Client) FindMovie(id string) (mov MovieDetails, err error) {
 	mov.Title = headerEl.Find("h2 a").First().Text()
 
 	img := headerEl.Find("img.poster").First()
-	mov.PosterURL = cl.BaseURL + img.AttrOr("data-src", "")
+	imgHref := img.AttrOr("data-src", "")
+	if imgHref != "" {
+		mov.PosterURL = cl.BaseURL + imgHref
+	}
 
 	mov.Overview = strings.TrimSpace(headerEl.Find(".overview").Text())
 
@@ -143,8 +147,13 @@ func (cl Client) DiscoverMovies(params DiscoverMoviesParams) (movs []Movie, err 
 		m := Movie{}
 		m.ID = s.Find(".options").AttrOr("data-id", "")
 		m.Title = s.Find("h2").Text()
-		m.PosterURL = cl.BaseURL + s.Find("img").AttrOr("src", "")
 		m.ReleaseDate = s.Find("p").Text()
+
+		posterSrc := s.Find("img").AttrOr("src", "")
+		if posterSrc != "" {
+			m.PosterURL = cl.BaseURL + posterSrc
+		}
+
 		perc, err := strconv.ParseFloat(s.Find(".user_score_chart").AttrOr("data-percent", ""), 64)
 		if err != nil {
 			log.Print(err)
@@ -155,5 +164,51 @@ func (cl Client) DiscoverMovies(params DiscoverMoviesParams) (movs []Movie, err 
 		movs = append(movs, m)
 	})
 
+	return
+}
+
+type FindMoviesParams struct {
+	Query string
+}
+
+func (cl Client) FindMovies(params FindMoviesParams) (res []Movie, err error) {
+	q := url.Values{}
+	q.Set("query", params.Query)
+
+	req, err := http.NewRequest("GET", cl.BaseURL+"/search/movie?"+q.Encode(), nil)
+	if err != nil {
+		return
+	}
+
+	req.Header.Set("User-Agent", DefaultUserAgent)
+
+	resp, err := cl.HTTP.Do(req)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		err = errors.New("failed to find movies")
+		return
+	}
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return
+	}
+
+	doc.Find(".search_results:not(.hide) > .results > .card:not(.hide)").Each(func(i int, s *goquery.Selection) {
+		m := Movie{}
+		m.ID = strings.TrimPrefix(s.Find("a").First().AttrOr("href", ""), "/movie/")
+		m.Title = s.Find("h2").First().Text()
+		m.ReleaseDate = s.Find(".release_date").First().Text()
+		posterSrc := s.Find(".poster img").First().AttrOr("src", "")
+		posterSrc = regexp.MustCompile(`/t/p/.*?/`).ReplaceAllString(posterSrc, "/t/p/w300_and_h450_bestv2/")
+		if posterSrc != "" {
+			m.PosterURL = cl.BaseURL + posterSrc
+		}
+		res = append(res, m)
+	})
 	return
 }

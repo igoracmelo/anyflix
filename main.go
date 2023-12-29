@@ -49,7 +49,20 @@ func main() {
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets/"))))
 
 	http.HandleFunc("/movies", func(w http.ResponseWriter, r *http.Request) {
-		res, err := tmdb.DiscoverMovies(tmdbapi.DiscoverMoviesParams{})
+		q := r.URL.Query()
+		query := q.Get("query")
+
+		var res []tmdbapi.Movie
+		var err error
+
+		if query != "" {
+			res, err = tmdb.FindMovies(tmdbapi.FindMoviesParams{
+				Query: query,
+			})
+		} else {
+			res, err = tmdb.DiscoverMovies(tmdbapi.DiscoverMoviesParams{})
+		}
+
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -57,6 +70,7 @@ func main() {
 
 		err = template.Must(template.ParseFiles("pages/contents.tmpl.html")).Execute(w, map[string]any{
 			"Movies": res,
+			"Query":  q.Get("query"),
 		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
