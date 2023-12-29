@@ -1,7 +1,7 @@
 package ttcsv
 
 import (
-	"anyflix/ttsearch"
+	"anyflix/torrents"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,7 +9,7 @@ import (
 	"net/url"
 )
 
-var _ ttsearch.Searcher = Client{}
+var _ torrents.Searcher = Client{}
 
 type Client struct {
 	HTTP    *http.Client
@@ -24,7 +24,7 @@ func NewClient(httpClient *http.Client) Client {
 }
 
 // Search implements ttsearch.Searcher.
-func (cl Client) Search(params ttsearch.SearchParams) (res []ttsearch.Result, err error) {
+func (cl Client) Search(params torrents.SearchParams) (res []torrents.Result, err error) {
 	q := url.Values{}
 	q.Set("q", params.Query)
 	q.Set("page", fmt.Sprint(params.Page))
@@ -56,9 +56,9 @@ func (cl Client) Search(params ttsearch.SearchParams) (res []ttsearch.Result, er
 		return
 	}
 
-	res = make([]ttsearch.Result, len(resMap))
+	res = make([]torrents.Result, len(resMap))
 	for i := 0; i < len(res); i++ {
-		res[i] = ttsearch.Result{
+		res[i] = torrents.Result{
 			InfoHash:  resMap[i]["infohash"].(string),
 			Name:      resMap[i]["name"].(string),
 			Seeders:   int(resMap[i]["seeders"].(float64)),

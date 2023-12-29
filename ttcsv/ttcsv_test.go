@@ -2,7 +2,7 @@ package ttcsv
 
 import (
 	th "anyflix/testhelper"
-	"anyflix/ttsearch"
+	"anyflix/torrents"
 	"fmt"
 	"io"
 	"net/http"
@@ -14,7 +14,7 @@ func TestSearch(t *testing.T) {
 	httpClient := &http.Client{}
 	cl := NewClient(httpClient)
 
-	params := ttsearch.SearchParams{
+	params := torrents.SearchParams{
 		Query: "south park",
 		Page:  5,
 		Size:  20,
@@ -51,7 +51,7 @@ func TestSearch(t *testing.T) {
 	th.Assert(t, reached, "server not reached")
 	th.AssertEqual(t, nil, err)
 	th.AssertEqual(t, 1, len(res))
-	th.AssertDeepEqual(t, []ttsearch.Result{
+	th.AssertDeepEqual(t, []torrents.Result{
 		{
 			InfoHash:  "dd8255ecdc7ca55fb0bbf81323d87062db1f6d1c",
 			Name:      "Big Buck Bunny",
