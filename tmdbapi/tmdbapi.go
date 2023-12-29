@@ -97,9 +97,12 @@ func (cl Client) FindMovie(id string) (mov MovieDetails, err error) {
 
 	sYear := headerEl.Find(".release_date").Text()
 	sYear = strings.Trim(sYear, "()")
-	mov.ReleaseYear, err = strconv.Atoi(sYear)
-	if err != nil {
-		return
+	if sYear != "" {
+		mov.ReleaseYear, err = strconv.Atoi(sYear)
+		if err != nil {
+			log.Print(err)
+			err = nil
+		}
 	}
 
 	style := doc.Find("#main style").First().Text()
