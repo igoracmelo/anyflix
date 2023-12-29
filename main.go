@@ -148,13 +148,13 @@ func main() {
 		}
 
 		if true {
-			err = watchInMPV(id)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
+			go func() {
+				err = watchInMPV(id)
+				if err != nil {
+					log.Print(err)
+				}
+			}()
 
-			http.Redirect(w, r, r.URL.String(), http.StatusPermanentRedirect)
 			return
 		}
 
