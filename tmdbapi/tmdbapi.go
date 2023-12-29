@@ -1,6 +1,7 @@
 package tmdbapi
 
 import (
+	"errors"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -48,6 +49,11 @@ func (cl Client) FindMovie(id string) (mov Movie, err error) {
 		return
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		err = errors.New("failed to find movie")
+		return
+	}
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
