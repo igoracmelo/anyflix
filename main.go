@@ -34,6 +34,25 @@ func main() {
 	defer torrentClient.Close()
 
 	var searcher torrents.Searcher = ttcsv.NewClient(http.DefaultClient)
+	tmdb := tmdbapi.NewClient(http.DefaultClient)
+
+	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets/"))))
+
+	http.HandleFunc("/movies", func(w http.ResponseWriter, r *http.Request) {
+		res, err := tmdb.FindMovies(tmdbapi.FindMoviesParams{})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = template.Must(template.ParseFiles("pages/contents.tmpl.html")).Execute(w, map[string]any{
+			"Movies": res,
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	})
 
 	http.HandleFunc("/movie", func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
@@ -43,8 +62,7 @@ func main() {
 			return
 		}
 
-		cl := tmdbapi.NewClient(http.DefaultClient)
-		m, err := cl.FindMovie(id)
+		m, err := tmdb.FindMovie(id)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -200,6 +218,7 @@ func main() {
 		}
 	})
 
+	log.Print("starting server at :3000")
 	log.Fatal(http.ListenAndServe(":3000", nil))
 }
 
