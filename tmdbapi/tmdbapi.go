@@ -129,6 +129,11 @@ func (cl Client) DiscoverMovies(params DiscoverMoviesParams) (movs []Movie, err 
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode >= 400 {
+		err = errors.New("failed to find movies")
+		return
+	}
+
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
 		return
