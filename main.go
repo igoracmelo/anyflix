@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"embed"
 	"errors"
 	"fmt"
 	"html/template"
@@ -23,6 +25,9 @@ import (
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/types/infohash"
 )
+
+//go:embed web
+var fs embed.FS
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
@@ -69,10 +74,15 @@ func main() {
 			return
 		}
 
-		err = template.Must(template.ParseFiles("pages/contents.tmpl.html")).Execute(w, map[string]any{
+		data := map[string]any{
 			"Movies": res,
 			"Query":  q.Get("query"),
-		})
+		}
+
+		err = template.
+			Must(template.New("").ParseFS(fs, "web/pages/*")).
+			ExecuteTemplate(w, "contents.tmpl.html", data)
+
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -159,7 +169,10 @@ func main() {
 			Sources: sources,
 		}
 
-		err = template.Must(template.ParseFiles("pages/content.tmpl.html")).Execute(w, data)
+		err = template.
+			Must(template.New("").ParseFS(fs, "web/pages/*")).
+			ExecuteTemplate(w, "content.tmpl.html", data)
+
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -172,21 +185,27 @@ func main() {
 			http.Error(w, "missing 'id' in query", http.StatusBadRequest)
 			return
 		}
+		player := q.Get("player")
 
-		if true {
+		if player == "mpv" {
 			go func() {
-				err = watchInMPV(id)
-				if err != nil {
-					log.Print(err)
-				}
+				// err = watchInMPV(r.Context(), id)
+				// if err != nil {
+				// 	log.Print(err)
+				// }
 			}()
 
-			return
+			err = template.
+				Must(template.New("").ParseFS(fs, "web/pages/*")).
+				ExecuteTemplate(w, "watch-external.tmpl.html", nil)
+		} else {
+			err = template.
+				Must(template.New("").ParseFS(fs, "web/pages/*")).
+				ExecuteTemplate(w, "watch.tmpl.html", map[string]string{
+					"ID": id,
+				})
 		}
 
-		err := template.Must(template.ParseFiles("pages/watch.tmpl.html")).Execute(w, map[string]string{
-			"ID": id,
-		})
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -280,8 +299,8 @@ func loadTorrentVideo(cl *torrent.Client, id string) (video *torrent.File, err e
 	return
 }
 
-func watchInMPV(id string) error {
-	cmd := exec.Command("mpv", "http://localhost:3000/watch/stream?id="+id)
+func watchInMPV(ctx context.Context, id string) error {
+	cmd := exec.CommandContext(ctx, "mpv", "http://localhost:3000/watch/stream?id="+id)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
