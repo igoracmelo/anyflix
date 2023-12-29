@@ -145,7 +145,7 @@ func (cl Client) FindMovies(params FindMoviesParams) (movs []Movie, err error) {
 		return
 	}
 
-	doc.Find(".media_items .card").Each(func(i int, s *goquery.Selection) {
+	doc.Find(".media_items .card:not(.filler)").Each(func(i int, s *goquery.Selection) {
 		m := Movie{}
 		m.ID = s.Find(".options").AttrOr("data-id", "")
 		m.Title = s.Find("h2").Text()
