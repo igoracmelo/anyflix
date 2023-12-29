@@ -63,3 +63,23 @@ func TestFindMovie(t *testing.T) {
 	th.AssertDeepEqual(t, want, got)
 	th.Assert(t, reached, "server not reached")
 }
+
+func TestFindMovies(t *testing.T) {
+	httpClient := &http.Client{}
+	cl := NewClient(httpClient)
+
+	reached := false
+	var f th.RoundTripFunc = func(req *http.Request) *http.Response {
+		reached = true
+
+		th.AssertEqual(t, "POST", req.Method)
+		th.AssertEqual(t, "www.themoviedb.org", req.URL.Host)
+		th.AssertEqual(t, "/discover/movie", req.URL.Path)
+		return nil
+	}
+	httpClient.Transport = f
+
+	_, err := cl.FindMovies(FindMoviesParams{})
+	th.AssertEqual(t, nil, err)
+	th.Assert(t, reached, "request not being sent")
+}

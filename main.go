@@ -43,7 +43,7 @@ func main() {
 			return
 		}
 
-		cl := tmdbapi.NewClient()
+		cl := tmdbapi.NewClient(http.DefaultClient)
 		m, err := cl.FindMovie(id)
 		if err != nil {
 			log.Fatal(err)

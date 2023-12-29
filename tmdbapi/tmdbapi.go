@@ -17,11 +17,19 @@ type Client struct {
 	BaseURL string
 }
 
-func NewClient() Client {
+func NewClient(httpClient *http.Client) Client {
 	return Client{
-		HTTP:    http.DefaultClient,
+		HTTP:    httpClient,
 		BaseURL: "https://www.themoviedb.org",
 	}
+}
+
+type Movie struct {
+	ID            string
+	Title         string
+	ReleaseDate   string
+	RatingPercent int
+	PosterURL     string
 }
 
 type MovieDetails struct {
@@ -102,5 +110,13 @@ func (cl Client) FindMovie(id string) (mov Movie, err error) {
 		mov.BackdropURL = cl.BaseURL + mov.BackdropURL
 	}
 
+	return
+}
+
+type FindMoviesParams struct {
+}
+
+func (cl Client) FindMovies(params FindMoviesParams) (movs []Movie, err error) {
+	cl.HTTP.Post(cl.BaseURL+"/discover/movie", "", nil)
 	return
 }
