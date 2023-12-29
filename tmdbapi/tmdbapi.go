@@ -2,6 +2,8 @@ package tmdbapi
 
 import (
 	"errors"
+	"log"
+	"math"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -48,7 +50,18 @@ type MovieDetails struct {
 	Directors            []string
 }
 
-func (cl Client) FindMovie(id string) (mov Movie, err error) {
+func (cl Client) FindMovie(id string) (mov MovieDetails, err error) {
+	mov = MovieDetails{
+		ID:          "670292",
+		Title:       "The Creator",
+		ReleaseYear: 2023,
+		PosterURL:   "https://www.themoviedb.org/t/p/w300_and_h450_bestv2/vBZ0qvaRxqEhZwl6LWmruJqWE8Z.jpg",
+		BackdropURL: "https://www.themoviedb.org/t/p/original/kjQBrc00fB2RjHZB3PGR4w9ibpz.jpg",
+		Overview:    "Amid a future war between the human race and the forces of artificial intelligence, a hardened ex-special forces agent grieving the disappearance of his wife, is recruited to hunt down and kill the Creator, the elusive architect of advanced AI who has developed a mysterious weapon with the power to end the war—and mankind itself.",
+		Directors:   []string{"Gareth Edwards"},
+	}
+	return
+
 	req, err := http.NewRequest("GET", cl.BaseURL+"/movie/"+id, nil)
 	if err != nil {
 		return
@@ -117,6 +130,36 @@ type FindMoviesParams struct {
 }
 
 func (cl Client) FindMovies(params FindMoviesParams) (movs []Movie, err error) {
-	cl.HTTP.Post(cl.BaseURL+"/discover/movie", "", nil)
+	req, _ := http.NewRequest("POST", cl.BaseURL+"/discover/movie", strings.NewReader(""))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+	req.Header.Set("User-Agent", DefaultUserAgent)
+
+	resp, err := cl.HTTP.Do(req)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return
+	}
+
+	doc.Find(".media_items .card").Each(func(i int, s *goquery.Selection) {
+		m := Movie{}
+		m.ID = s.Find(".options").AttrOr("data-id", "")
+		m.Title = s.Find("h2").Text()
+		m.PosterURL = cl.BaseURL + s.Find("img").AttrOr("src", "")
+		m.ReleaseDate = s.Find("p").Text()
+		perc, err := strconv.ParseFloat(s.Find(".user_score_chart").AttrOr("data-percent", ""), 64)
+		if err != nil {
+			log.Print(err)
+			return
+		}
+		m.RatingPercent = int(math.Round(perc))
+
+		movs = append(movs, m)
+	})
+
 	return
 }

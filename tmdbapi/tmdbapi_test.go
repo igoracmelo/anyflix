@@ -2,9 +2,14 @@ package tmdbapi
 
 import (
 	th "anyflix/testhelper"
+	"bytes"
+	"fmt"
 	"html/template"
+	"io"
+	"math"
 	"net/http"
 	"net/url"
+	"strconv"
 	"testing"
 )
 
@@ -68,6 +73,40 @@ func TestFindMovies(t *testing.T) {
 	httpClient := &http.Client{}
 	cl := NewClient(httpClient)
 
+	type movie struct {
+		ID        string
+		Title     string
+		PosterSrc string
+		Percent   string
+		HDate     string
+	}
+	tmplMovies := []movie{}
+
+	for i := 1; i <= 10; i++ {
+		tmplMovies = append(tmplMovies, movie{
+			ID:        fmt.Sprint(i),
+			Title:     "movie " + fmt.Sprint(i),
+			PosterSrc: fmt.Sprintf("/path/to/poster%d.png", i),
+			Percent:   fmt.Sprintf("%d.%d", i*10, 100-i*10),
+			HDate:     fmt.Sprintf("%d de nov de 20%0d", i, i),
+		})
+	}
+
+	wants := []Movie{}
+	for _, mov := range tmplMovies {
+		perc, err := strconv.ParseFloat(mov.Percent, 64)
+		th.AssertEqual(t, nil, err)
+		perc = math.Round(perc)
+
+		wants = append(wants, Movie{
+			ID:            mov.ID,
+			Title:         mov.Title,
+			PosterURL:     cl.BaseURL + mov.PosterSrc,
+			ReleaseDate:   mov.HDate,
+			RatingPercent: int(perc),
+		})
+	}
+
 	reached := false
 	var f th.RoundTripFunc = func(req *http.Request) *http.Response {
 		reached = true
@@ -75,11 +114,25 @@ func TestFindMovies(t *testing.T) {
 		th.AssertEqual(t, "POST", req.Method)
 		th.AssertEqual(t, "www.themoviedb.org", req.URL.Host)
 		th.AssertEqual(t, "/discover/movie", req.URL.Path)
-		return nil
+		th.AssertEqual(t, "application/x-www-form-urlencoded; charset=UTF-8", req.Header.Get("Content-Type"))
+		th.AssertEqual(t, DefaultUserAgent, req.Header.Get("User-Agent"))
+
+		body := &bytes.Buffer{}
+		err := template.Must(template.ParseFiles("testdata/movies.tmpl.html")).Execute(body, tmplMovies)
+		th.AssertEqual(t, nil, err)
+
+		return &http.Response{
+			Body: io.NopCloser(body),
+		}
 	}
 	httpClient.Transport = f
 
-	_, err := cl.FindMovies(FindMoviesParams{})
+	gots, err := cl.FindMovies(FindMoviesParams{})
 	th.AssertEqual(t, nil, err)
 	th.Assert(t, reached, "request not being sent")
+	th.AssertEqual(t, len(tmplMovies), len(gots))
+
+	for i := 0; i < len(wants); i++ {
+		th.AssertDeepEqual(t, wants[i], gots[i])
+	}
 }

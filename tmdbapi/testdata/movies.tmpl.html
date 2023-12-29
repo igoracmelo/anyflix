@@ -1,0 +1,50 @@
+<div class="media_items results">
+  <div id="page_1" class="page_wrapper">
+    {{ range . }}
+    <div class="card style_1">
+      <div class="image">
+        <div class="wrapper">
+          <a class="image" href="/movie/{{ .ID }}" title="{{ .Title }}">
+            <img loading="lazy" class="poster" src="{{ .PosterSrc }}" alt="{{ .Title }}">
+          </a>
+        </div>
+        <div class="options" data-id="{{ .ID }}" data-object-id="515a4cb319c2952ad809aa43" data-media-type="movie">
+          <a class="no_click" href="#">
+            <div class="glyphicons_v2 circle-more white"></div>
+          </a>
+        </div>
+      </div>
+      <div class="content">
+        <div class="consensus tight">
+          <div class="outer_ring">
+            <div class="user_score_chart 515a4cb319c2952ad809aa43" data-percent="{{ .Percent }}" data-track-color="#423d0f"
+              data-bar-color="#d2d531">
+              <div class="percent">
+                <span class="icon icon-r55"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h2><a href="/movie/182219" title="{{ .Title }}">{{ .Title }}</a></h2>
+        <p>{{ .HDate }}</p>
+      </div>
+
+      <div class="hover 182219"></div>
+    </div>
+    {{ end }}
+
+    <div id="pagination_page_1" data-next-page="2" data-current-page="1"
+      class="pagination infinite background_color light_blue">
+      <div class="loading_wrapper hide">
+        <div class="ball-scale-multiple loader">
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+      </div>
+      <p class="load_more"><a class="no_click load_more" data-next-page="2" data-current-page="1"
+          href="/discover/movie?page=2">Carregar mais</a></p>
+    </div>
+  </div>
+</div>
