@@ -8,6 +8,8 @@ An experimental self-hosted streaming application for movies and tv shows.
 
 1. Install the dependencies
 
+It depends on your system, so please do your own research.
+
 2. Clone the repository
 
 ```sh
@@ -28,7 +30,7 @@ go run .
 - [ ] Movies
     - [X] Get specific movie info
     - [X] List popular movies
-    - [ ] Search movies
+    - [X] Search movies
     - [X] Find torrents for a specific movie
     - [X] Guess resolution
 - [ ] Include embeded subtitles in web player
