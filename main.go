@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -91,8 +92,10 @@ func main() {
 			log.Fatal(err)
 		}
 
+		titleClean := regexp.MustCompile(`\W`).ReplaceAllString(m.Title, " ")
+
 		results, err := searcher.Search(torrents.SearchParams{
-			Query: fmt.Sprintf("%s %d", m.Title, m.ReleaseYear),
+			Query: fmt.Sprintf("%s %d", titleClean, m.ReleaseYear),
 			Page:  1,
 			Size:  20,
 		})
