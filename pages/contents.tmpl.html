@@ -15,6 +15,7 @@
 
 <body>
     <link rel="stylesheet" href="/assets/global.css">
+    <script src="https://kit.fontawesome.com/a7bc2a2a9f.js" crossorigin="anonymous"></script>
     <style>
         .container {
             color: white;
@@ -22,7 +23,7 @@
             height: 100vh;
             overflow-y: scroll;
             padding: 25px;
-            background-color: #113;
+            background-image: linear-gradient(45deg, #311, #312, #113);
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -38,22 +39,27 @@
             padding: 10px 30px;
             margin: 20px 10px;
             color: white;
-            background-color: transparent;
-            border: 2px solid white;
+            background-color: #fff3;
             border-radius: 25px;
             width: min(500px, 100%);
+        }
+        .btn-search {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: transparent;
+            margin-left: -40px;
+            z-index: 2;
+            cursor: pointer;
         }
         .contents {
             width: 100%;
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            /* grid-template-columns: repeat(5, 300px); */
+            grid-auto-rows: 400px;
             grid-gap: 20px;
         }
         .content {
             padding: 10px;
-            color: black;
-            background-color: white;
+            color: white;
             display: flex;
             flex-direction: column;
             text-align: center;
@@ -63,8 +69,10 @@
             padding: 10px;
         }
         .content_img {
-            border: 2px solid #0001;
+            border-radius: 5px;
             background-color: #ccc;
+            background-size: cover;
+            background-position: center center;
             width: 100%;
             flex: 1;
         }
@@ -74,15 +82,19 @@
         <h1>Movies</h1>
         <form action="/movies">
             <input type="text" class="search" name="query" placeholder="Search" value="{{ .Query }}">
+            <button class="btn-search" type="submit">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
         </form>
 
         <div class="contents">
             {{ range .Movies }}
             <a class="content" href="/movie?id={{ .ID }}">
                 {{ if ne .PosterURL "" }}
-                <img class="content_img" src="{{ .PosterURL }}" alt="{{ .Title }}">
+                <div class="content_img" style="background-image: url('{{ .PosterURL }}')"></div>
+                <!-- <img class="content_img" src="{{ .PosterURL }}" alt="{{ .Title }}"> -->
                 {{ else }}
-                <img class="content_img" src="https://placehold.co/240x320?text=No%20cover" alt="{{ .Title }}">
+                <div class="content_img" style="background-image: url('https://placehold.co/240x320?text=No%20cover')"></div>
                 {{ end}}
 
                 <div class="content_title">{{ .Title }}</div>
