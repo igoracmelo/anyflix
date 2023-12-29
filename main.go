@@ -39,7 +39,7 @@ func main() {
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets/"))))
 
 	http.HandleFunc("/movies", func(w http.ResponseWriter, r *http.Request) {
-		res, err := tmdb.FindMovies(tmdbapi.FindMoviesParams{})
+		res, err := tmdb.DiscoverMovies(tmdbapi.DiscoverMoviesParams{})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

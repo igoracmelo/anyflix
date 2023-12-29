@@ -127,7 +127,7 @@ func TestFindMovies(t *testing.T) {
 	}
 	httpClient.Transport = f
 
-	gots, err := cl.FindMovies(FindMoviesParams{})
+	gots, err := cl.DiscoverMovies(DiscoverMoviesParams{})
 	th.AssertEqual(t, nil, err)
 	th.Assert(t, reached, "request not being sent")
 	th.AssertEqual(t, len(tmplMovies), len(gots))

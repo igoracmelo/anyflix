@@ -126,10 +126,10 @@ func (cl Client) FindMovie(id string) (mov MovieDetails, err error) {
 	return
 }
 
-type FindMoviesParams struct {
+type DiscoverMoviesParams struct {
 }
 
-func (cl Client) FindMovies(params FindMoviesParams) (movs []Movie, err error) {
+func (cl Client) DiscoverMovies(params DiscoverMoviesParams) (movs []Movie, err error) {
 	req, _ := http.NewRequest("POST", cl.BaseURL+"/discover/movie", strings.NewReader(""))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
 	req.Header.Set("User-Agent", DefaultUserAgent)
