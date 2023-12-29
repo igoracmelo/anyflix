@@ -107,7 +107,7 @@ func main() {
 		})
 
 		data := struct {
-			Content tmdbapi.Movie
+			Content tmdbapi.MovieDetails
 			Sources []Source
 		}{
 			Content: m,

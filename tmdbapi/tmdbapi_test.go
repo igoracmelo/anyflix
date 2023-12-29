@@ -34,7 +34,7 @@ func TestFindMovie(t *testing.T) {
 		Directors:   []string{"Ron Howard"},
 	}
 
-	want := Movie{
+	want := MovieDetails{
 		ID:          tmplData.ID,
 		Title:       tmplData.Title,
 		ReleaseYear: 2000,

@@ -24,7 +24,7 @@ func NewClient() Client {
 	}
 }
 
-type Movie struct {
+type MovieDetails struct {
 	ID          string
 	Title       string
 	ReleaseYear int
@@ -32,8 +32,12 @@ type Movie struct {
 	RatingPercent int
 	PosterURL     string
 	BackdropURL   string
-	Overview      string
-	Directors     []string
+	// TODO
+	ColorPrimary string
+	// TODO
+	ColorPrimaryContrast string
+	Overview             string
+	Directors            []string
 }
 
 func (cl Client) FindMovie(id string) (mov Movie, err error) {
