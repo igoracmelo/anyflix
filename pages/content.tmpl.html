@@ -163,6 +163,8 @@
                     <div class="top">
                         {{ if ne .Resolution 0 }}
                         <div class="resolution">{{ .Resolution }}p</div>
+                        {{ else }}
+                        <div class="resolution">Unknown</div>
                         {{ end }}
                         <div class="languages">
                             {{ range .Languages }}
