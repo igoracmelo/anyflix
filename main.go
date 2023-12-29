@@ -1,10 +1,6 @@
 package main
 
 import (
-	"anyflix/ioutil"
-	"anyflix/tmdbapi"
-	"anyflix/torrents"
-	"anyflix/ttcsv"
 	"errors"
 	"fmt"
 	"html/template"
@@ -17,6 +13,11 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/igoracmelo/anyflix/ioutil"
+	"github.com/igoracmelo/anyflix/tmdbapi"
+	"github.com/igoracmelo/anyflix/torrents"
+	"github.com/igoracmelo/anyflix/ttcsv"
 
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/types/infohash"

@@ -1,13 +1,15 @@
 package ttcsv
 
 import (
-	th "anyflix/testhelper"
-	"anyflix/torrents"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/igoracmelo/anyflix/torrents"
+
+	th "github.com/igoracmelo/anyflix/testhelper"
 )
 
 func TestSearch(t *testing.T) {

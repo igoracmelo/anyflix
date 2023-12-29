@@ -1,7 +1,6 @@
 package tmdbapi
 
 import (
-	th "anyflix/testhelper"
 	"bytes"
 	"fmt"
 	"html/template"
@@ -11,6 +10,8 @@ import (
 	"net/url"
 	"strconv"
 	"testing"
+
+	th "github.com/igoracmelo/anyflix/testhelper"
 )
 
 func TestFindMovie(t *testing.T) {

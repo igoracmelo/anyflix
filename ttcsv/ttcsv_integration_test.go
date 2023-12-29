@@ -3,10 +3,12 @@
 package ttcsv
 
 import (
-	th "anyflix/testhelper"
-	"anyflix/ttsearch"
 	"net/http"
 	"testing"
+
+	"github.com/igoracmelo/anyflix/ttsearch"
+
+	th "github.com/igoracmelo/anyflix/testhelper"
 )
 
 func TestSearchE2E(t *testing.T) {

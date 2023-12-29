@@ -1,4 +1,4 @@
-module anyflix
+module github.com/igoracmelo/anyflix
 
 go 1.21
 

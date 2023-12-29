@@ -1,12 +1,13 @@
 package ttcsv
 
 import (
-	"anyflix/torrents"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+
+	"github.com/igoracmelo/anyflix/torrents"
 )
 
 var _ torrents.Searcher = Client{}
