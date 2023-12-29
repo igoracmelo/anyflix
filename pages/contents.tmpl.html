@@ -11,18 +11,38 @@
     <link rel="stylesheet" href="/assets/global.css">
     <style>
         .container {
+            color: white;
             width: 100%;
             padding: 25px;
             background-color: #203;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+        form {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+        .search {
+            padding: 10px 30px;
+            margin: 20px 10px;
+            color: white;
+            background-color: transparent;
+            border: 2px solid white;
+            border-radius: 25px;
+            width: min(500px, 100%);
         }
         .contents {
             width: 100%;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             grid-gap: 20px;
         }
         .content {
             padding: 10px;
+            color: black;
             background-color: white;
             display: flex;
             flex-direction: column;
@@ -40,6 +60,11 @@
     </style>
 
     <div class="container">
+        <h1>Movies</h1>
+        <form action="/movies">
+            <input type="text" class="search" name="term" placeholder="Search">
+        </form>
+
         <div class="contents">
             {{ range .Movies }}
             <a class="content" href="/movie?id={{ .ID }}">
