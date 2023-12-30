@@ -91,9 +91,9 @@ func main() {
 				Must(template.New("").ParseFS(fs, "web/pages/*")).
 				ExecuteTemplate(w, "contents.partial.html", data)
 		} else {
-		err = template.
-			Must(template.New("").ParseFS(fs, "web/pages/*")).
-			ExecuteTemplate(w, "contents.tmpl.html", data)
+			err = template.
+				Must(template.New("").ParseFS(fs, "web/pages/*")).
+				ExecuteTemplate(w, "contents.tmpl.html", data)
 		}
 
 		if err != nil {
@@ -202,10 +202,10 @@ func main() {
 
 		if player == "mpv" {
 			go func() {
-				// err = watchInMPV(r.Context(), id)
-				// if err != nil {
-				// 	log.Print(err)
-				// }
+				err = watchInMPV(context.Background(), id)
+				if err != nil {
+					log.Print(err)
+				}
 			}()
 
 			err = template.
