@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -27,7 +28,7 @@ import (
 )
 
 //go:embed web
-var fs embed.FS
+var webFS embed.FS
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
@@ -39,6 +40,11 @@ func main() {
 		log.Fatal(err)
 	}
 	defer torrentClient.Close()
+
+	assetsFS, err := fs.Sub(webFS, "web/assets")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	var searcher torrents.Searcher = ttcsv.NewClient(http.DefaultClient)
 	tmdb := tmdbapi.NewClient(http.DefaultClient)
@@ -52,7 +58,7 @@ func main() {
 		http.NotFound(w, r)
 	})
 
-	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets/"))))
+	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.FS(assetsFS))))
 
 	http.HandleFunc("/contents", func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
@@ -91,11 +97,11 @@ func main() {
 
 		if q.Get("partial") != "" {
 			err = template.
-				Must(template.New("").ParseFS(fs, "web/pages/*")).
+				Must(template.New("").ParseFS(webFS, "web/pages/*")).
 				ExecuteTemplate(w, "contents.partial.html", data)
 		} else {
 			err = template.
-				Must(template.New("").ParseFS(fs, "web/pages/*")).
+				Must(template.New("").ParseFS(webFS, "web/pages/*")).
 				ExecuteTemplate(w, "contents.tmpl.html", data)
 		}
 
@@ -190,7 +196,7 @@ func main() {
 		}
 
 		err = template.
-			Must(template.New("").ParseFS(fs, "web/pages/*")).
+			Must(template.New("").ParseFS(webFS, "web/pages/*")).
 			ExecuteTemplate(w, "content.tmpl.html", data)
 
 		if err != nil {
@@ -216,11 +222,11 @@ func main() {
 			}()
 
 			err = template.
-				Must(template.New("").ParseFS(fs, "web/pages/*")).
+				Must(template.New("").ParseFS(webFS, "web/pages/*")).
 				ExecuteTemplate(w, "watch-external.tmpl.html", nil)
 		} else {
 			err = template.
-				Must(template.New("").ParseFS(fs, "web/pages/*")).
+				Must(template.New("").ParseFS(webFS, "web/pages/*")).
 				ExecuteTemplate(w, "watch.tmpl.html", map[string]string{
 					"ID": id,
 				})
