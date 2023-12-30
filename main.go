@@ -332,3 +332,13 @@ func watchInMPV(ctx context.Context, id string) error {
 	err := cmd.Run()
 	return err
 }
+
+func min(s ...int64) int64 {
+	res := s[0]
+	for _, i := range s {
+		if i < res {
+			res = i
+		}
+	}
+	return res
+}
