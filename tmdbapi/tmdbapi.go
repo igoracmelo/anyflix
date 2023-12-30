@@ -52,6 +52,12 @@ type ContentDetails struct {
 	ColorPrimaryContrast string
 	Overview             string
 	Directors            []string
+	Seasons              []Season
+}
+
+type Season struct {
+	ID    string
+	Title string
 }
 
 func (cl Client) Details(id string, kind string) (mov ContentDetails, err error) {
