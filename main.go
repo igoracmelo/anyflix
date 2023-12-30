@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -33,8 +34,14 @@ var webFS embed.FS
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
+	cacheDir, err := os.UserCacheDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	config := torrent.NewDefaultClientConfig()
-	config.DataDir = "/tmp"
+
+	config.DataDir = filepath.Join(cacheDir, "anyflix", "torrent")
 	torrentClient, err := torrent.NewClient(config)
 	if err != nil {
 		log.Fatal(err)
