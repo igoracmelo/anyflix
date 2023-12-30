@@ -35,8 +35,13 @@ go run .
     - [X] Search movies
     - [X] Find torrents for a specific movie
     - [X] Guess resolution
+    - [ ] Movie details (ratings, casting, original title, original language, trailer, duration)
 - [ ] Include embeded subtitles in web player
 - [ ] Include embeded audio tracks in web player
 - [ ] Replace mpv executable with libmpv
-- [ ] Embed pages on binary
+- [X] Embed pages on binary
+- [ ] Embed all web assets on binary
 - [ ] Choose prefered language for content
+- [ ] Offline
+    - [ ] Favorite shows
+    - [ ] Favorite movies
