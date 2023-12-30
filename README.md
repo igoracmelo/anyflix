@@ -42,6 +42,8 @@ go run .
 - [X] Embed pages on binary
 - [ ] Embed all web assets on binary
 - [ ] Choose prefered language for content
+- [ ] Previous page button
+- [ ] Content page responsivity
 - [ ] Offline
     - [ ] Favorite shows
     - [ ] Favorite movies
