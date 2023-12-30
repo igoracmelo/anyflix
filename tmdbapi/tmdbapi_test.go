@@ -40,7 +40,7 @@ func TestFindMovie(t *testing.T) {
 		Directors:   []string{"Ron Howard"},
 	}
 
-	want := MovieDetails{
+	want := ContentDetails{
 		ID:          tmplData.ID,
 		Title:       tmplData.Title,
 		ReleaseYear: 2000,
@@ -63,7 +63,7 @@ func TestFindMovie(t *testing.T) {
 	server := th.NewServer(t, u, f)
 	defer server.Close()
 
-	got, err := cl.FindMovie(want.ID)
+	got, err := cl.Details(want.ID, "movie")
 	th.AssertEqual(t, nil, err)
 
 	th.AssertDeepEqual(t, want, got)
@@ -93,13 +93,13 @@ func TestFindMovies(t *testing.T) {
 		})
 	}
 
-	wants := []Movie{}
+	wants := []Content{}
 	for _, mov := range tmplMovies {
 		perc, err := strconv.ParseFloat(mov.Percent, 64)
 		th.AssertEqual(t, nil, err)
 		perc = math.Round(perc)
 
-		wants = append(wants, Movie{
+		wants = append(wants, Content{
 			ID:            mov.ID,
 			Title:         mov.Title,
 			PosterURL:     cl.BaseURL + mov.PosterSrc,
@@ -119,7 +119,7 @@ func TestFindMovies(t *testing.T) {
 		th.AssertEqual(t, DefaultUserAgent, req.Header.Get("User-Agent"))
 
 		body := &bytes.Buffer{}
-		err := template.Must(template.ParseFiles("testdata/movies.tmpl.html")).Execute(body, tmplMovies)
+		err := template.Must(template.ParseFiles("testdata/contents.tmpl.html")).Execute(body, tmplMovies)
 		th.AssertEqual(t, nil, err)
 
 		return &http.Response{
@@ -128,7 +128,7 @@ func TestFindMovies(t *testing.T) {
 	}
 	httpClient.Transport = f
 
-	gots, err := cl.DiscoverMovies(DiscoverMoviesParams{})
+	gots, err := cl.Discover(DiscoverParams{})
 	th.AssertEqual(t, nil, err)
 	th.Assert(t, reached, "request not being sent")
 	th.AssertEqual(t, len(tmplMovies), len(gots))

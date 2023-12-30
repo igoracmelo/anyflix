@@ -45,7 +45,7 @@ func main() {
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
-			http.Redirect(w, r, "/movies", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, "/contents", http.StatusTemporaryRedirect)
 			return
 		}
 
@@ -54,7 +54,7 @@ func main() {
 
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets/"))))
 
-	http.HandleFunc("/movies", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/contents", func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		query := q.Get("query")
 		page, _ := strconv.Atoi(q.Get("page"))
@@ -62,16 +62,18 @@ func main() {
 			page = 1
 		}
 
-		var res []tmdbapi.Movie
+		var res []tmdbapi.Content
 		var err error
 
 		if query != "" {
-			res, err = tmdb.FindMovies(tmdbapi.FindMoviesParams{
+			res, err = tmdb.Find(tmdbapi.FindParams{
+				Kind:  q.Get("type"),
 				Query: query,
 				Page:  page,
 			})
 		} else {
-			res, err = tmdb.DiscoverMovies(tmdbapi.DiscoverMoviesParams{
+			res, err = tmdb.Discover(tmdbapi.DiscoverParams{
+				Kind: q.Get("type"),
 				Page: page,
 			})
 		}
@@ -82,8 +84,9 @@ func main() {
 		}
 
 		data := map[string]any{
-			"Movies": res,
-			"Query":  q.Get("query"),
+			"Contents": res,
+			"Query":    q.Get("query"),
+			"Kind":     q.Get("type"),
 		}
 
 		if q.Get("partial") != "" {
@@ -102,15 +105,19 @@ func main() {
 		}
 	})
 
-	http.HandleFunc("/movie", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/content", func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		id := q.Get("id")
 		if id == "" {
 			http.Error(w, "missing 'id' in query", http.StatusBadRequest)
 			return
 		}
+		kind := q.Get("type")
+		if kind == "" {
+			kind = "movie"
+		}
 
-		m, err := tmdb.FindMovie(id)
+		m, err := tmdb.Details(id, kind)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -175,7 +182,7 @@ func main() {
 		})
 
 		data := struct {
-			Content tmdbapi.MovieDetails
+			Content tmdbapi.ContentDetails
 			Sources []Source
 		}{
 			Content: m,

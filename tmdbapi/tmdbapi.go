@@ -28,16 +28,18 @@ func NewClient(httpClient *http.Client) Client {
 	}
 }
 
-type Movie struct {
+type Content struct {
 	ID            string
+	Kind          string
 	Title         string
 	ReleaseDate   string
 	RatingPercent int
 	PosterURL     string
 }
 
-type MovieDetails struct {
+type ContentDetails struct {
 	ID          string
+	Kind        string
 	Title       string
 	ReleaseYear int
 	// TODO
@@ -52,8 +54,9 @@ type MovieDetails struct {
 	Directors            []string
 }
 
-func (cl Client) FindMovie(id string) (mov MovieDetails, err error) {
-	req, err := http.NewRequest("GET", cl.BaseURL+"/movie/"+id, nil)
+func (cl Client) Details(id string, kind string) (mov ContentDetails, err error) {
+	mov.Kind = kind
+	req, err := http.NewRequest("GET", cl.BaseURL+"/"+kind+"/"+id, nil)
 	if err != nil {
 		return
 	}
@@ -123,19 +126,23 @@ func (cl Client) FindMovie(id string) (mov MovieDetails, err error) {
 	return
 }
 
-type DiscoverMoviesParams struct {
+type DiscoverParams struct {
 	Page int
+	Kind string
 }
 
-func (cl Client) DiscoverMovies(params DiscoverMoviesParams) (movs []Movie, err error) {
+func (cl Client) Discover(params DiscoverParams) (movs []Content, err error) {
 	if params.Page == 0 {
 		params.Page = 1
+	}
+	if params.Kind == "" {
+		params.Kind = "movie"
 	}
 
 	form := url.Values{}
 	form.Set("page", fmt.Sprint(params.Page))
 
-	req, _ := http.NewRequest("POST", cl.BaseURL+"/discover/movie", strings.NewReader(form.Encode()))
+	req, _ := http.NewRequest("POST", cl.BaseURL+"/discover/"+params.Kind, strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
 	req.Header.Set("User-Agent", DefaultUserAgent)
 
@@ -156,8 +163,9 @@ func (cl Client) DiscoverMovies(params DiscoverMoviesParams) (movs []Movie, err 
 	}
 
 	doc.Find(".media_items .card:not(.filler)").Each(func(i int, s *goquery.Selection) {
-		m := Movie{}
+		m := Content{}
 		m.ID = s.Find(".options").AttrOr("data-id", "")
+		m.Kind = params.Kind
 		m.Title = s.Find("h2").Text()
 		m.ReleaseDate = s.Find("p").Text()
 
@@ -179,17 +187,25 @@ func (cl Client) DiscoverMovies(params DiscoverMoviesParams) (movs []Movie, err 
 	return
 }
 
-type FindMoviesParams struct {
+type FindParams struct {
+	Kind  string
 	Query string
 	Page  int
 }
 
-func (cl Client) FindMovies(params FindMoviesParams) (res []Movie, err error) {
+func (cl Client) Find(params FindParams) (res []Content, err error) {
+	if params.Kind == "" {
+		params.Kind = "movie"
+	}
+	if params.Page == 0 {
+		params.Page = 1
+	}
+
 	q := url.Values{}
 	q.Set("query", params.Query)
 	q.Set("page", fmt.Sprint(params.Page))
 
-	req, err := http.NewRequest("GET", cl.BaseURL+"/search/movie?"+q.Encode(), nil)
+	req, err := http.NewRequest("GET", cl.BaseURL+"/search/"+params.Kind+"?"+q.Encode(), nil)
 	if err != nil {
 		return
 	}
@@ -213,9 +229,11 @@ func (cl Client) FindMovies(params FindMoviesParams) (res []Movie, err error) {
 	}
 
 	doc.Find(".search_results:not(.hide) > .results > .card:not(.hide)").Each(func(i int, s *goquery.Selection) {
-		m := Movie{}
+		m := Content{}
 		m.ID = strings.TrimPrefix(s.Find("a").First().AttrOr("href", ""), "/movie/")
+		m.Kind = params.Kind
 		m.Title = s.Find("h2").First().Text()
+		m.RatingPercent = -1
 		m.ReleaseDate = s.Find(".release_date").First().Text()
 		posterSrc := s.Find(".poster img").First().AttrOr("src", "")
 		posterSrc = regexp.MustCompile(`/t/p/.*?/`).ReplaceAllString(posterSrc, "/t/p/w300_and_h450_bestv2/")

@@ -30,7 +30,9 @@
         form {
             width: 100%;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
         }
 
         .search {
@@ -50,6 +52,18 @@
             cursor: pointer;
         }
 
+        .sel-type {
+            color: white;
+            padding: 10px;
+            background-color: transparent;
+            border-radius: 10px;
+        }
+
+        .sel-type option {
+            color: white;
+            background-color: transparent;
+        }
+
         .contents {
             width: 100%;
             display: grid;
@@ -59,11 +73,37 @@
         }
 
         .content {
+            position: relative;
             padding: 10px;
             color: white;
             display: flex;
             flex-direction: column;
             text-align: center;
+        }
+
+        .content_rating {
+            font-size: 12px;
+            font-weight: bold;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: grid;
+            place-items: center;
+            width: 40px;
+            height: 40px;
+            border: 3px solid white;
+            background-color: black;
+            border-radius: 50%;
+        }
+
+        .content_rating.good {
+            border: 3px solid rgb(88, 234, 88);
+        }
+        .content_rating.mid {
+            border: 3px solid rgb(253, 253, 68);
+        }
+        .content_rating.bad {
+            border: 3px solid rgb(248, 49, 49);
         }
 
         .content_title {
@@ -106,12 +146,30 @@
 
     <div class="app">
         <div class="container">
-            <h1><a href="/movies">Movies</a></h1>
-            <form action="/movies">
-                <input type="text" class="search" name="query" placeholder="Search" value="{{ .Query }}">
-                <button class="btn-search" type="submit">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                </button>
+            <h1>
+                {{ if eq .Query "" }}
+                Popular -
+                {{ else }}
+                Results -
+                {{ end}}
+
+                {{ if eq .Kind "tv" }}
+                TV shows
+                {{ else }}
+                movies
+                {{ end }}
+            </h1>
+            <form action="/contents">
+                <div class="row">
+                    <input type="text" class="search" name="query" placeholder="Search" value="{{ .Query }}">
+                    <button class="btn-search" type="submit">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </div>
+                <select name="type" class="sel-type">
+                    <option {{ if eq .Kind "movie" }}selected{{ end }} value="movie">Movies</option>
+                    <option {{ if eq .Kind "tv" }}selected{{ end }} value="tv">TV Shows</option>
+                </select>
             </form>
 
             <div class="contents">
@@ -130,11 +188,13 @@
         let query = document.querySelector('.search').value
         let contents = document.querySelector('.contents')
         let spinner = document.querySelector('.spinner')
+        let selType = document.querySelector('.sel-type')
+        let form = document.querySelector('form')
         let page = 1
 
         let loadNext = debounce(async () => {
 
-            let res = await fetch(`/movies?query=${query}&page=${page+1}&partial=1`)
+            let res = await fetch(`/contents?query=${query}&page=${page+1}&partial=1`)
             page++
             let text = await res.text()
 
@@ -145,6 +205,10 @@
 
             spinner.classList.add('hide')
         }, 1000)
+
+        selType.onchange = () => {
+            form.submit()
+        }
 
         app.onscroll = () => {
             let pos = infScroll.getBoundingClientRect()

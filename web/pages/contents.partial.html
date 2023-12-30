@@ -1,5 +1,5 @@
-{{ range .Movies }}
-<a class="content" href="/movie?id={{ .ID }}">
+{{ range .Contents }}
+<a class="content" href="/content?id={{ .ID }}&type={{ .Kind }}">
     {{ if ne .PosterURL "" }}
     <div class="content_img" style="background-image: url('{{ .PosterURL }}')"></div>
     <!-- <img class="content_img" src="{{ .PosterURL }}" alt="{{ .Title }}"> -->
@@ -10,6 +10,17 @@
 
     <div class="content_title">{{ .Title }}</div>
     <div>{{ .ReleaseDate }}</div>
-    <!-- <div>{{ .RatingPercent }}%</div> -->
+
+    {{ if gt .RatingPercent 0 }}
+    <div class="content_rating
+        {{ if ge .RatingPercent 70 }}
+        good
+        {{ else if ge .RatingPercent 50 }}
+        mid
+        {{ else }}
+        bad
+        {{ end }}
+    ">{{ .RatingPercent }}%</div>
+    {{ end }}
 </a>
 {{ end }}
