@@ -57,6 +57,10 @@ func main() {
 	http.HandleFunc("/movies", func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		query := q.Get("query")
+		page, _ := strconv.Atoi(q.Get("page"))
+		if page == 0 {
+			page = 1
+		}
 
 		var res []tmdbapi.Movie
 		var err error
@@ -64,9 +68,12 @@ func main() {
 		if query != "" {
 			res, err = tmdb.FindMovies(tmdbapi.FindMoviesParams{
 				Query: query,
+				Page:  page,
 			})
 		} else {
-			res, err = tmdb.DiscoverMovies(tmdbapi.DiscoverMoviesParams{})
+			res, err = tmdb.DiscoverMovies(tmdbapi.DiscoverMoviesParams{
+				Page: page,
+			})
 		}
 
 		if err != nil {
@@ -79,9 +86,15 @@ func main() {
 			"Query":  q.Get("query"),
 		}
 
+		if q.Get("partial") != "" {
+			err = template.
+				Must(template.New("").ParseFS(fs, "web/pages/*")).
+				ExecuteTemplate(w, "contents.partial.html", data)
+		} else {
 		err = template.
 			Must(template.New("").ParseFS(fs, "web/pages/*")).
 			ExecuteTemplate(w, "contents.tmpl.html", data)
+		}
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -264,7 +277,7 @@ func main() {
 		}
 	})
 
-	log.Print("starting server at :3000")
+	log.Print("starting server at http://localhost:3000")
 	log.Fatal(http.ListenAndServe(":3000", nil))
 }
 

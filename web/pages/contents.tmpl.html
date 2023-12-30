@@ -53,8 +53,8 @@
         .contents {
             width: 100%;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            grid-auto-rows: 400px;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            grid-auto-rows: 450px;
             grid-gap: 20px;
         }
 
@@ -79,11 +79,34 @@
             width: 100%;
             flex: 1;
         }
+
+        .spinner {
+            top: 50%;
+            left: 50%;
+            position: absolute;
+            font-size: 100px;
+            padding: 20px;
+            display: block;
+            filter: drop-shadow(5px 5px 5px #0005);
+            animation: rotation 1s infinite linear;
+        }
+        .spinner.hide {
+            display: none;
+        }
+
+        @keyframes rotation {
+            from {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
     </style>
 
     <div class="app">
         <div class="container">
-            <h1>Movies</h1>
+            <h1><a href="/movies">Movies</a></h1>
             <form action="/movies">
                 <input type="text" class="search" name="query" placeholder="Search" value="{{ .Query }}">
                 <button class="btn-search" type="submit">
@@ -92,23 +115,53 @@
             </form>
 
             <div class="contents">
-                {{ range .Movies }}
-                <a class="content" href="/movie?id={{ .ID }}">
-                    {{ if ne .PosterURL "" }}
-                    <div class="content_img" style="background-image: url('{{ .PosterURL }}')"></div>
-                    <!-- <img class="content_img" src="{{ .PosterURL }}" alt="{{ .Title }}"> -->
-                    {{ else }}
-                    <div class="content_img"
-                        style="background-image: url('https://placehold.co/240x320?text=No%20cover')"></div>
-                    {{ end}}
-
-                    <div class="content_title">{{ .Title }}</div>
-                    <div>{{ .ReleaseDate }}</div>
-                    <!-- <div>{{ .RatingPercent }}%</div> -->
-                </a>
-                {{ end }}
+                {{ template "contents.partial.html" . }}
+            </div>
+            <div class="infinity-scroll"></div>
+            <div class="spinner hide">
+                <i class="fa-solid fa-circle-notch"></i>
             </div>
         </div>
     </div>
+
+    <script>
+        let app = document.querySelector('.app')
+        let infScroll = document.querySelector('.infinity-scroll')
+        let query = document.querySelector('.search').value
+        let contents = document.querySelector('.contents')
+        let spinner = document.querySelector('.spinner')
+        let page = 1
+
+        let loadNext = debounce(async () => {
+
+            let res = await fetch(`/movies?query=${query}&page=${page+1}&partial=1`)
+            page++
+            let text = await res.text()
+
+            let doc = new DOMParser().parseFromString(text, 'text/html')
+            for (let el of doc.querySelectorAll('.content')) {
+                contents.appendChild(el)
+            }
+
+            spinner.classList.add('hide')
+        }, 1000)
+
+        app.onscroll = () => {
+            let pos = infScroll.getBoundingClientRect()
+
+            if (pos.top >= 0 && pos.bottom <= window.innerHeight) {
+                spinner.classList.remove('hide')
+                loadNext()
+            }
+        }
+
+        function debounce(fn, ms) {
+            let timer
+            return function() {
+                clearTimeout(timer)
+                timer = setTimeout(fn, ms)
+            }
+        }
+    </script>
 </body>
 </html>
