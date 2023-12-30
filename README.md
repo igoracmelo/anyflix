@@ -37,3 +37,4 @@ go run .
 - [ ] Include embeded audio tracks in web player
 - [ ] Replace mpv executable with libmpv
 - [ ] Embed pages on binary
+- [ ] Choose prefered language for content
