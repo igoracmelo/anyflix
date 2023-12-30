@@ -6,14 +6,14 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/igoracmelo/anyflix/ttsearch"
+	"github.com/igoracmelo/anyflix/torrents"
 
 	th "github.com/igoracmelo/anyflix/testhelper"
 )
 
 func TestSearchE2E(t *testing.T) {
 	cl := NewClient(http.DefaultClient)
-	res, err := cl.Search(ttsearch.SearchParams{
+	res, err := cl.Search(torrents.SearchParams{
 		Query: "south park",
 		Page:  1,
 		Size:  1,
