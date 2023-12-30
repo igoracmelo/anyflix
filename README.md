@@ -1,6 +1,8 @@
 # Anyflix
 
-An experimental self-hosted streaming application for movies and tv shows.
+[WIP] A self-hosted streaming application for movies and tv shows.
+
+![photo_2023-12-30_01-56-00](https://github.com/igoracmelo/anyflix/assets/85039990/61953c96-3c8a-4510-aa80-82ae4625dcd1)
 
 # Running
 
