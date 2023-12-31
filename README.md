@@ -1,6 +1,6 @@
 # Anyflix
 
-[WIP] A self-hosted streaming application for movies and tv shows.
+[WIP] A self-hosted streaming application for public domain movies and tv shows.
 
 ![photo_2023-12-31_17-06-20](https://github.com/igoracmelo/anyflix/assets/85039990/350df101-5afc-4882-a1bd-edacd9ef8c00)
 
