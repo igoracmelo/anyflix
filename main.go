@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"embed"
 	"errors"
 	"fmt"
 	"html/template"
@@ -19,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/igoracmelo/anyflix/embedded"
 	"github.com/igoracmelo/anyflix/ioutil"
 	"github.com/igoracmelo/anyflix/tmdbapi"
 	"github.com/igoracmelo/anyflix/torrents"
@@ -27,9 +27,6 @@ import (
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/types/infohash"
 )
-
-//go:embed web
-var webFS embed.FS
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
@@ -48,10 +45,12 @@ func main() {
 	}
 	defer torrentClient.Close()
 
-	assetsFS, err := fs.Sub(webFS, "web/assets")
+	publicFS, err := fs.Sub(embedded.FS, "public")
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	tmpl := template.Must(template.ParseFS(embedded.FS, "tmpl/*"))
 
 	var searcher torrents.Searcher = ttcsv.NewClient(http.DefaultClient)
 	tmdb := tmdbapi.NewClient(http.DefaultClient)
@@ -65,7 +64,7 @@ func main() {
 		http.NotFound(w, r)
 	})
 
-	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.FS(assetsFS))))
+	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.FS(publicFS))))
 
 	http.HandleFunc("/contents", func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
@@ -103,13 +102,9 @@ func main() {
 		}
 
 		if q.Get("partial") != "" {
-			err = template.
-				Must(template.New("").ParseFS(webFS, "web/pages/*")).
-				ExecuteTemplate(w, "contents.partial.html", data)
+			err = tmpl.ExecuteTemplate(w, "contents.partial.html", data)
 		} else {
-			err = template.
-				Must(template.New("").ParseFS(webFS, "web/pages/*")).
-				ExecuteTemplate(w, "contents.tmpl.html", data)
+			err = tmpl.ExecuteTemplate(w, "contents.tmpl.html", data)
 		}
 
 		if err != nil {
@@ -202,9 +197,7 @@ func main() {
 			Sources: sources,
 		}
 
-		err = template.
-			Must(template.New("").ParseFS(webFS, "web/pages/*")).
-			ExecuteTemplate(w, "content.tmpl.html", data)
+		err = tmpl.ExecuteTemplate(w, "content.tmpl.html", data)
 
 		if err != nil {
 			log.Fatal(err)
@@ -228,13 +221,9 @@ func main() {
 				}
 			}()
 
-			err = template.
-				Must(template.New("").ParseFS(webFS, "web/pages/*")).
-				ExecuteTemplate(w, "watch-external.tmpl.html", nil)
+			err = tmpl.ExecuteTemplate(w, "watch-external.tmpl.html", nil)
 		} else {
-			err = template.
-				Must(template.New("").ParseFS(webFS, "web/pages/*")).
-				ExecuteTemplate(w, "watch.tmpl.html", map[string]string{
+			err = tmpl.ExecuteTemplate(w, "watch.tmpl.html", map[string]string{
 					"ID": id,
 				})
 		}
