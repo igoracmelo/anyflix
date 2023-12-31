@@ -6,25 +6,45 @@
 
 # Running
 
-**Required:** Go +1.21, Git, MPV, Web browser
+**Required:** Go +1.21, web browser
 
-1. Install the dependencies
+**Optional:** MPV
 
-It depends on your system, so please do your own research.
+### 1. Install the dependencies
 
-2. Clone the repository
+It varies by system, so please do your own research.
 
-```sh
-git clone https://github.com/igoracmelo/anyflix
-```
-
-3. Run the server
+### 2. Install it using `go install`
 
 ```sh
-go run .
+go install https://github.com/igoracmelo/anyflix@b00cecf
+# I don't recommend using @latest because it is usually outdated
 ```
 
-4. Open the browser at `http://localhost:3000`
+### 3. Run the application
+
+```sh
+$(go env GOPATH)/bin/anyflix
+```
+
+Which is usually equivalent to
+
+```sh
+~/go/bin/anyflix
+```
+
+Or even better if `~/go/bin/` is in your `PATH`
+
+```sh
+anyflix
+```
+
+### 4. Open your browser and visit `http://localhost:3000`
+
+# Known issues
+
+Some audio and video codecs are not supported.
+I'm trying to find a way to transcode it "on demand" without needing HLS or similar solutions, but I think I will end up needing it.
 
 # TODO
 - [X] stream torrent video using HTTP range requests
