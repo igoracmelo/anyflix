@@ -14,7 +14,7 @@
 
 It varies by system, so please do your own research.
 
-### 2. Install it using `go install`
+### 2. Install anyflix using `go install`
 
 ```sh
 go install https://github.com/igoracmelo/anyflix@b00cecf
@@ -60,10 +60,10 @@ I'm trying to find a way to transcode it "on demand" without needing HLS or simi
 - [ ] Include embeded audio tracks in web player
 - [ ] Replace mpv executable with libmpv
 - [X] Embed pages on binary
-- [ ] Embed all web assets on binary
+- [X] Embed all web assets on binary
 - [ ] Choose prefered language for content
 - [ ] Previous page button
-- [ ] Content page responsivity
+- [X] Content page responsivity
 - [ ] Offline
     - [ ] Favorite shows
     - [ ] Favorite movies
