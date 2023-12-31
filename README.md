@@ -2,7 +2,7 @@
 
 [WIP] A self-hosted streaming application for movies and tv shows.
 
-![photo_2023-12-30_01-56-00](https://github.com/igoracmelo/anyflix/assets/85039990/61953c96-3c8a-4510-aa80-82ae4625dcd1)
+![photo_2023-12-31_17-06-20](https://github.com/igoracmelo/anyflix/assets/85039990/350df101-5afc-4882-a1bd-edacd9ef8c00)
 
 # Running
 
@@ -43,8 +43,8 @@ anyflix
 
 # Known issues
 
-Some audio and video codecs are not supported.
-I'm trying to find a way to transcode it "on demand" without needing HLS or similar solutions, but I think I will end up needing it.
+Some audio and video codecs are not supported on browsers, but most will work on MPV.
+I'm trying to find a way to transcode it "on demand" without needing HLS or similar solutions, but I think I will end up needing it, or just giving up on supporting these codecs and force you to use MPV.
 
 # TODO
 - [X] stream torrent video using HTTP range requests
