@@ -153,7 +153,11 @@
         </div>
         <div class="right">
             <!-- <div class="bottom"></div> -->
+            {{ if .Sources }}
             Select option
+            {{ else }}
+            No option found :/
+            {{ end }}
             <div class="sources">
                 {{ range .Sources }}
                 <a class="source" title="{{ .Name }}" href="/watch?id={{.ID}}&player=">
