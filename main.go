@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/fs"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -17,6 +18,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/igoracmelo/anyflix/embedded"
 	"github.com/igoracmelo/anyflix/ioutil"
@@ -54,6 +56,17 @@ func main() {
 
 	var searcher torrents.Searcher = ttcsv.NewClient(http.DefaultClient)
 	tmdb := tmdbapi.NewClient(http.DefaultClient)
+
+	l, err := net.Listen("tcp", ":3000")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print("listening at http://localhost:3000")
+
+	defer func() {
+		log.Fatal(http.Serve(l, nil))
+	}()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
@@ -120,6 +133,10 @@ func main() {
 			http.Error(w, "missing 'id' in query", http.StatusBadRequest)
 			return
 		}
+		id = strings.TrimLeftFunc(id, func(r rune) bool {
+			return !unicode.IsDigit(r)
+		})
+
 		kind := q.Get("type")
 		if kind == "" {
 			kind = "movie"
@@ -224,8 +241,8 @@ func main() {
 			err = tmpl.ExecuteTemplate(w, "watch-external.tmpl.html", nil)
 		} else {
 			err = tmpl.ExecuteTemplate(w, "watch.tmpl.html", map[string]string{
-					"ID": id,
-				})
+				"ID": id,
+			})
 		}
 
 		if err != nil {
@@ -286,8 +303,6 @@ func main() {
 		}
 	})
 
-	log.Print("starting server at http://localhost:3000")
-	log.Fatal(http.ListenAndServe(":3000", nil))
 }
 
 func loadTorrentVideo(cl *torrent.Client, id string) (video *torrent.File, err error) {
