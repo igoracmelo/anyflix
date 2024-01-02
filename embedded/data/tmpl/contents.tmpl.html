@@ -189,12 +189,13 @@
         let contents = document.querySelector('.contents')
         let spinner = document.querySelector('.spinner')
         let selType = document.querySelector('.sel-type')
+        let type = selType.value
         let form = document.querySelector('form')
         let page = 1
 
         let loadNext = debounce(async () => {
 
-            let res = await fetch(`/contents?query=${query}&page=${page+1}&partial=1`)
+            let res = await fetch(`/contents?query=${query}&page=${page+1}&partial=1&type=${type}`)
             page++
             let text = await res.text()
 
