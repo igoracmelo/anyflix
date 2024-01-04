@@ -62,10 +62,11 @@ func main() {
 	}()
 
 	h := handler{
-		publicFS: publicFS,
-		tmdb:     tmdb,
-		tmpl:     tmpl,
-		searcher: searcher,
+		publicFS:      publicFS,
+		tmdb:          tmdb,
+		tmpl:          tmpl,
+		searcher:      searcher,
+		torrentClient: torrentClient,
 	}
 
 	http.HandleFunc("/", h.Root)
