@@ -56,6 +56,8 @@ I'm trying to find a way to transcode it "on demand" without needing HLS or simi
     - [X] Find torrents for a specific movie
     - [X] Guess resolution
     - [ ] Movie details (ratings, casting, original title, original language, trailer, duration)
+- [ ] Page: choose watch option (browser / mpv / copy link)
+- [ ] Series: list episodes
 - [ ] Include embeded subtitles in web player
 - [ ] Include embeded audio tracks in web player
 - [ ] Replace mpv executable with libmpv
