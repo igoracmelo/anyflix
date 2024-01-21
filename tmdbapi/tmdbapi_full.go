@@ -56,7 +56,10 @@ func (cl Client) Discover(params DiscoverParams) (movs []Content, err error) {
 
 		posterSrc := s.Find("img").AttrOr("src", "")
 		if posterSrc != "" {
-			m.PosterURL = cl.BaseURL + posterSrc
+			m.PosterURL = posterSrc
+			if strings.HasPrefix(m.PosterURL, "/") {
+				m.PosterURL = cl.BaseURL + m.PosterURL
+			}
 		}
 
 		perc, err := strconv.ParseFloat(s.Find(".user_score_chart").AttrOr("data-percent", ""), 64)
@@ -117,7 +120,10 @@ func (cl Client) Find(params FindParams) (res []Content, err error) {
 		posterSrc := s.Find(".poster img").First().AttrOr("src", "")
 		posterSrc = regexp.MustCompile(`/t/p/.*?/`).ReplaceAllString(posterSrc, "/t/p/w300_and_h450_bestv2/")
 		if posterSrc != "" {
-			m.PosterURL = cl.BaseURL + posterSrc
+			m.PosterURL = posterSrc
+			if strings.HasPrefix(m.PosterURL, "/") {
+				m.PosterURL = cl.BaseURL + m.PosterURL
+			}
 		}
 		res = append(res, m)
 	})
