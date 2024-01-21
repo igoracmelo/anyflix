@@ -30,10 +30,16 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	torrentDir := filepath.Join(cacheDir, "anyflix", "torrent")
+
+	err = os.MkdirAll(torrentDir, fs.ModePerm)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	config := torrent.NewDefaultClientConfig()
 
-	config.DataDir = filepath.Join(cacheDir, "anyflix", "torrent")
+	config.DataDir = torrentDir
 	torrentClient, err := torrent.NewClient(config)
 	if err != nil {
 		log.Fatal(err)
