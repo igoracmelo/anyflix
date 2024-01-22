@@ -3,7 +3,6 @@ package tmdb
 import (
 	"context"
 	"fmt"
-	"io"
 	"log"
 	"math"
 	"net/http"
@@ -13,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/igoracmelo/anyflix/src/errorutil"
 	"github.com/igoracmelo/anyflix/src/tv"
 )
 
@@ -122,7 +122,7 @@ func (cl Client) findContents(ctx context.Context, params findContentsParams) (c
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
-		return nil, newRequestError(req, resp)
+		err = errorutil.NewRequestError(req, resp)
 	}
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
@@ -208,7 +208,7 @@ func (cl Client) discoverContents(ctx context.Context, params discoverContentsPa
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
-		err = newRequestError(req, resp)
+		err = errorutil.NewRequestError(req, resp)
 		return
 	}
 
@@ -272,7 +272,7 @@ func (cl Client) findContentDetails(ctx context.Context, id, kind string) (doc *
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
-		err = newRequestError(req, resp)
+		err = errorutil.NewRequestError(req, resp)
 		return
 	}
 
@@ -329,29 +329,4 @@ func (cl Client) findContentDetails(ctx context.Context, id, kind string) (doc *
 		content.BackdropURL = cl.BaseURL + content.BackdropURL
 	}
 	return
-}
-
-type requestError struct {
-	method string
-	path   string
-	status int
-	body   []byte
-}
-
-func newRequestError(req *http.Request, resp *http.Response) requestError {
-	b, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Print(err)
-	}
-
-	return requestError{
-		method: req.Method,
-		path:   req.URL.Path,
-		status: resp.StatusCode,
-		body:   b,
-	}
-}
-
-func (err requestError) Error() string {
-	return fmt.Sprintf("%s %s: %d %s", err.method, err.path, err.status, string(err.body))
 }

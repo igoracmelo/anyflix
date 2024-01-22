@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/igoracmelo/anyflix/src/th"
-	"github.com/igoracmelo/anyflix/src/tmdb"
 	"github.com/igoracmelo/anyflix/src/tv"
+	"github.com/igoracmelo/anyflix/src/tv/tmdb"
 )
 
 func TestFindMovies(t *testing.T) {
