@@ -10,6 +10,7 @@ import (
 
 	"github.com/igoracmelo/anyflix/src/th"
 	"github.com/igoracmelo/anyflix/src/tmdb"
+	"github.com/igoracmelo/anyflix/src/tv"
 )
 
 func TestFindMovies(t *testing.T) {
@@ -18,7 +19,7 @@ func TestFindMovies(t *testing.T) {
 	cl := tmdb.DefaultClient()
 	cl.DefaultLang = "pt-BR"
 
-	movies, err := cl.FindMovies(context.Background(), tmdb.FindMoviesParams{
+	movies, err := cl.FindMovies(context.Background(), tv.FindMoviesParams{
 		Title: "mario",
 		Page:  1,
 	})
@@ -36,7 +37,7 @@ func TestFindShows(t *testing.T) {
 
 	cl := tmdb.DefaultClient()
 
-	shows, err := cl.FindShows(context.Background(), tmdb.FindShowsParams{
+	shows, err := cl.FindShows(context.Background(), tv.FindShowsParams{
 		Title: "mario",
 		Page:  1,
 	})
@@ -54,7 +55,7 @@ func TestDiscoverMovies(t *testing.T) {
 
 	cl := tmdb.DefaultClient()
 
-	movies, err := cl.DiscoverMovies(context.Background(), tmdb.DiscoverMoviesParams{
+	movies, err := cl.DiscoverMovies(context.Background(), tv.DiscoverMoviesParams{
 		Page: 1,
 	})
 
@@ -71,7 +72,7 @@ func TestDiscoverShows(t *testing.T) {
 
 	cl := tmdb.DefaultClient()
 
-	shows, err := cl.DiscoverShows(context.Background(), tmdb.DiscoverShowsParams{
+	shows, err := cl.DiscoverShows(context.Background(), tv.DiscoverShowsParams{
 		Page: 1,
 	})
 
@@ -103,7 +104,7 @@ func TestFindShowDetails(t *testing.T) {
 	assertValidContent(t, show.Content)
 }
 
-func assertValidContent(t *testing.T, content tmdb.Content) {
+func assertValidContent(t *testing.T, content tv.Content) {
 	t.Helper()
 
 	_, err := strconv.Atoi(content.ID)

@@ -13,41 +13,20 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/igoracmelo/anyflix/src/tv"
 )
 
 var DefaultUserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
-type requestError struct {
-	method string
-	path   string
-	status int
-	body   []byte
-}
-
-func newRequestError(req *http.Request, resp *http.Response) requestError {
-	b, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Print(err)
-	}
-
-	return requestError{
-		method: req.Method,
-		path:   req.URL.Path,
-		status: resp.StatusCode,
-		body:   b,
-	}
-}
-
-func (err requestError) Error() string {
-	return fmt.Sprintf("%s %s: %d %s", err.method, err.path, err.status, string(err.body))
-}
-
+// Client implements tv.API interface
 type Client struct {
 	DefaultLang string
 	BaseURL     string
 	UserAgent   string
 	HTTP        *http.Client
 }
+
+var _ tv.API = Client{}
 
 func DefaultClient() Client {
 	return Client{
@@ -80,7 +59,7 @@ func (cl Client) newRequest(ctx context.Context, params newRequestParams) (req *
 	return
 }
 
-func (cl Client) FindMovies(ctx context.Context, params FindMoviesParams) (movies []Movie, err error) {
+func (cl Client) FindMovies(ctx context.Context, params tv.FindMoviesParams) (movies []tv.Movie, err error) {
 	contents, err := cl.findContents(ctx, findContentsParams{
 		kind:  "movie",
 		title: params.Title,
@@ -89,15 +68,13 @@ func (cl Client) FindMovies(ctx context.Context, params FindMoviesParams) (movie
 	})
 
 	for _, c := range contents {
-		movies = append(movies, Movie{
-			Content: c,
-		})
+		movies = append(movies, tv.Movie{Content: c})
 	}
 
 	return
 }
 
-func (cl Client) FindShows(ctx context.Context, params FindShowsParams) (shows []Show, err error) {
+func (cl Client) FindShows(ctx context.Context, params tv.FindShowsParams) (shows []tv.Show, err error) {
 	contents, err := cl.findContents(ctx, findContentsParams{
 		kind:  "tv",
 		title: params.Title,
@@ -105,12 +82,12 @@ func (cl Client) FindShows(ctx context.Context, params FindShowsParams) (shows [
 		lang:  params.Lang,
 	})
 	for _, c := range contents {
-		shows = append(shows, Show{Content: c})
+		shows = append(shows, tv.Show{Content: c})
 	}
 	return
 }
 
-func (cl Client) findContents(ctx context.Context, params findContentsParams) (contents []Content, err error) {
+func (cl Client) findContents(ctx context.Context, params findContentsParams) (contents []tv.Content, err error) {
 	if params.page == 0 {
 		params.page = 1
 	}
@@ -154,7 +131,7 @@ func (cl Client) findContents(ctx context.Context, params findContentsParams) (c
 	}
 
 	doc.Find(".search_results:not(.hide) > .results > .card:not(.hide)").Each(func(i int, s *goquery.Selection) {
-		c := Content{}
+		c := tv.Content{}
 		contentHref := s.Find("a").First().AttrOr("href", "")
 		m := regexp.MustCompile(`/` + params.kind + `/(\d+)`).FindStringSubmatch(contentHref)
 		if len(m) != 2 {
@@ -181,29 +158,29 @@ func (cl Client) findContents(ctx context.Context, params findContentsParams) (c
 	return
 }
 
-func (cl Client) DiscoverMovies(ctx context.Context, params DiscoverMoviesParams) (movies []Movie, err error) {
+func (cl Client) DiscoverMovies(ctx context.Context, params tv.DiscoverMoviesParams) (movies []tv.Movie, err error) {
 	contents, err := cl.discoverContents(ctx, discoverContentsParams{
 		page: params.Page,
 		kind: "movie",
 	})
 	for _, c := range contents {
-		movies = append(movies, Movie{Content: c})
+		movies = append(movies, tv.Movie{Content: c})
 	}
 	return
 }
 
-func (cl Client) DiscoverShows(ctx context.Context, params DiscoverShowsParams) (movies []Show, err error) {
+func (cl Client) DiscoverShows(ctx context.Context, params tv.DiscoverShowsParams) (movies []tv.Show, err error) {
 	contents, err := cl.discoverContents(ctx, discoverContentsParams{
 		page: params.Page,
 		kind: "tv",
 	})
 	for _, c := range contents {
-		movies = append(movies, Show{Content: c})
+		movies = append(movies, tv.Show{Content: c})
 	}
 	return
 }
 
-func (cl Client) discoverContents(ctx context.Context, params discoverContentsParams) (contents []Content, err error) {
+func (cl Client) discoverContents(ctx context.Context, params discoverContentsParams) (contents []tv.Content, err error) {
 	if params.page == 0 {
 		params.page = 1
 	}
@@ -241,7 +218,7 @@ func (cl Client) discoverContents(ctx context.Context, params discoverContentsPa
 	}
 
 	doc.Find(".media_items .card:not(.filler)").Each(func(i int, s *goquery.Selection) {
-		c := Content{}
+		c := tv.Content{}
 		c.ID = s.Find(".options").AttrOr("data-id", "")
 		c.Kind = params.kind
 		c.Title = s.Find("h2").Text()
@@ -267,19 +244,19 @@ func (cl Client) discoverContents(ctx context.Context, params discoverContentsPa
 	return
 }
 
-func (cl Client) FindMovieDetails(ctx context.Context, id string) (movie MovieDetails, err error) {
+func (cl Client) FindMovieDetails(ctx context.Context, id string) (movie tv.MovieDetails, err error) {
 	_, content, err := cl.findContentDetails(ctx, id, "movie")
 	movie.ContentDetails = content
 	return
 }
 
-func (cl Client) FindShowDetails(ctx context.Context, id string) (show ShowDetails, err error) {
+func (cl Client) FindShowDetails(ctx context.Context, id string) (show tv.ShowDetails, err error) {
 	_, content, err := cl.findContentDetails(ctx, id, "tv")
 	show.ContentDetails = content
 	return
 }
 
-func (cl Client) findContentDetails(ctx context.Context, id, kind string) (doc *goquery.Document, content ContentDetails, err error) {
+func (cl Client) findContentDetails(ctx context.Context, id, kind string) (doc *goquery.Document, content tv.ContentDetails, err error) {
 	req, err := cl.newRequest(ctx, newRequestParams{
 		method: "GET",
 		path:   fmt.Sprintf("/%s/%s", kind, id),
@@ -352,4 +329,29 @@ func (cl Client) findContentDetails(ctx context.Context, id, kind string) (doc *
 		content.BackdropURL = cl.BaseURL + content.BackdropURL
 	}
 	return
+}
+
+type requestError struct {
+	method string
+	path   string
+	status int
+	body   []byte
+}
+
+func newRequestError(req *http.Request, resp *http.Response) requestError {
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Print(err)
+	}
+
+	return requestError{
+		method: req.Method,
+		path:   req.URL.Path,
+		status: resp.StatusCode,
+		body:   b,
+	}
+}
+
+func (err requestError) Error() string {
+	return fmt.Sprintf("%s %s: %d %s", err.method, err.path, err.status, string(err.body))
 }
