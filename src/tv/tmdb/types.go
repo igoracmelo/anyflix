@@ -24,4 +24,5 @@ type findContentsParams struct {
 type discoverContentsParams struct {
 	page int
 	kind string
+	lang string
 }

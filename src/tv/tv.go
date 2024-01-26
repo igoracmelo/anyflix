@@ -7,10 +7,16 @@ import (
 type API interface {
 	FindMovies(ctx context.Context, params FindMoviesParams) (movies []Movie, err error)
 	FindShows(ctx context.Context, params FindShowsParams) (shows []Show, err error)
+	Discover(ctx context.Context, params DiscoverParams) (contents []Content, err error)
 	DiscoverMovies(ctx context.Context, params DiscoverMoviesParams) (movies []Movie, err error)
-	DiscoverShows(ctx context.Context, params DiscoverShowsParams) (movies []Show, err error)
+	DiscoverShows(ctx context.Context, params DiscoverShowsParams) (shows []Show, err error)
 	FindMovieDetails(ctx context.Context, id string) (movie MovieDetails, err error)
 	FindShowDetails(ctx context.Context, id string) (show ShowDetails, err error)
+}
+
+type Opt[T any] struct {
+	Value T
+	Ok    bool
 }
 
 type Content struct {
@@ -46,6 +52,14 @@ type MovieDetails struct {
 
 type ShowDetails struct {
 	ContentDetails
+}
+
+type DiscoverParams struct {
+	Page      int
+	Kind      string
+	Lang      string
+	MinRating Opt[int]
+	MaxRating Opt[int]
 }
 
 type DiscoverMoviesParams struct {
