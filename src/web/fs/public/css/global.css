@@ -1,0 +1,53 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    color: inherit;
+}
+
+html {
+    font-family: Arial;
+}
+
+a {
+    text-decoration: none;
+}
+
+a:visited {
+    text-decoration: none;
+}
+
+.app {
+    color: white;
+    width: 100vw;
+    height: 100vh;
+    overflow-y: scroll;
+    background-image: linear-gradient(45deg, #311, #312, #113);
+}
+
+.row {
+    display: flex;
+}
+
+/* scrollbar */
+
+::-webkit-scrollbar {
+    cursor: pointer;
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c8c0aaaa;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #c8c0aaff;
+}
