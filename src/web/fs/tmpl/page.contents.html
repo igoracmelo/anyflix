@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="{{ " TODO" }}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ "TODO" }}</title>
+    <script src="/public/js/htmx.min.js"></script>
+    <link rel="stylesheet" href="/public/css/global.css">
+</head>
+
+<body>
+    <style>
+        .app {
+            padding: 20px 50px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            /* flex-wrap: wrap; */
+        }
+        .heading {
+            text-align: center;
+            padding: 20px 0;
+        }
+        h2 {
+            padding: 15px 0;
+        }
+        .hr {
+            display: block;
+            width: 100%;
+            height: 2px;
+            min-height: 2px;
+            margin: 20px 0;
+            background-color: #ccc1;
+        }
+        .contents {
+            /* margin: 20px 0; */
+            width: 100%;
+            height: 420px;
+            min-height: 420px;
+            display: flex;
+            gap: 10px;
+            overflow-y: hidden;
+            overflow-x: scroll;
+        }
+        .content {
+            /* min-height: 85px; */
+            width: 250px;
+            min-width: 250px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+            /* justify-content: space-between; */
+            gap: 10px;
+            cursor: pointer;
+            position: relative;
+        }
+        .content .img {
+            flex-grow: 1;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center center;
+            border-radius: 10px;
+        }
+        .content_title {
+            padding: 10px 0;
+            font-size: 14px;
+        }
+        .infinity-scroll {
+            display: block;
+            width: 1px;
+            height: 1px;
+        }
+        input {
+            color: black;
+            padding: 5px;
+        }
+    </style>
+    <div class="app">
+        <h1 class="heading">Popular contents</h1>
+
+        <form class="filters">
+            <!-- <input type="range" name="rating" min="0" max="100" value="0"> -->
+            <div>Rating:</div>
+            <input type="number" name="min_rating" value="0" min="0" max="100">
+            <input type="number" name="max_rating" value="100" min="0" max="100">
+            <input type="submit" value="filter">
+        </form>
+
+        <hr class="hr">
+        <h2>Movies</h2>
+        <div class="contents" hx-get="{{ .MoviesURL }}" hx-trigger="load"></div>
+
+        <hr class="hr">
+
+        <h2>TV Shows</h2>
+        <div class="contents" hx-get="{{ .ShowsURL }}" hx-trigger="load"></div>
+    </div>
+</body>
+
+</html>

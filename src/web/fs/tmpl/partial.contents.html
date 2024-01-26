@@ -1,0 +1,10 @@
+{{ range .Contents }}
+<a
+    class="content"
+    href="/content/{{ .ID }}?type={{ .Kind }}"
+>
+    <div class="img" style="background-image: url('{{ .PosterURL }}');"></div>
+    <h3 class="content_title">{{ .Title }}</h3>
+</a>
+{{ end }}
+<div hx-get="{{ .NextPageURL }}" class="infinity-scroll" hx-trigger="intersect once" hx-swap="outerHTML"></div>

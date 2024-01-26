@@ -47,14 +47,14 @@ Some audio and video codecs are not supported on browsers, but most will work on
 I'm trying to find a way to transcode it "on demand" without needing HLS or similar solutions, but I think I will end up needing it, or just giving up on supporting these codecs and force you to use MPV.
 
 # TODO
-- [X] stream torrent video using HTTP range requests
-- [X] play video on MPV
+- [ ] stream torrent video using HTTP range requests
+- [ ] play video on MPV
 - [ ] Movies
-    - [X] Get specific movie info
+    - [ ] Get specific movie info
     - [X] List popular movies
-    - [X] Search movies
-    - [X] Find torrents for a specific movie
-    - [X] Guess resolution
+    - [ ] Search movies
+    - [ ] Find torrents for a specific movie
+    - [ ] Guess resolution
     - [ ] Movie details (ratings, casting, original title, original language, trailer, duration)
 - [ ] Page: choose watch option (browser / mpv / copy link)
 - [ ] Series: list episodes
