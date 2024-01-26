@@ -1,17 +1,23 @@
 package tmdb
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"math"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/igoracmelo/anyflix/src/cache"
 	"github.com/igoracmelo/anyflix/src/errorutil"
 	"github.com/igoracmelo/anyflix/src/tv"
 )
@@ -20,6 +26,8 @@ var DefaultUserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTM
 
 // Client implements tv.API interface
 type Client struct {
+	Cache       cache.Cache[string, []byte]
+	CacheTTL    time.Duration
 	DefaultLang string
 	BaseURL     string
 	UserAgent   string
@@ -30,6 +38,8 @@ var _ tv.API = Client{}
 
 func DefaultClient() Client {
 	return Client{
+		Cache:       cache.New[string, []byte](),
+		CacheTTL:    1 * time.Hour,
 		DefaultLang: "pt-BR",
 		BaseURL:     "https://www.themoviedb.org",
 		UserAgent:   DefaultUserAgent,
@@ -57,6 +67,42 @@ func (cl Client) newRequest(ctx context.Context, params newRequestParams) (req *
 	req.Header.Set("User-Agent", cl.UserAgent)
 
 	return
+}
+
+func (cl Client) requestCached(req *http.Request) (*http.Response, error) {
+	if cl.CacheTTL == 0 || req.Method != "GET" {
+		return cl.HTTP.Do(req)
+	}
+
+	b, err := httputil.DumpRequest(req, false)
+	if err != nil {
+		return nil, err
+	}
+	sReq := string(b)
+
+	if bResp, ok := cl.Cache.Get(sReq); ok {
+		slog.Info("reading from cache")
+		return http.ReadResponse(bufio.NewReader(bytes.NewReader(bResp)), req)
+	}
+
+	resp, err := cl.HTTP.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	// don't cache error responses
+	if resp.StatusCode >= 400 {
+		return resp, nil
+	}
+
+	bResp, err := httputil.DumpResponse(resp, true)
+	if err != nil {
+		return nil, err
+	}
+
+	cl.Cache.Set(sReq, bResp, cl.CacheTTL)
+
+	return resp, err
 }
 
 func (cl Client) FindMovies(ctx context.Context, params tv.FindMoviesParams) (movies []tv.Movie, err error) {
@@ -115,7 +161,7 @@ func (cl Client) findContents(ctx context.Context, params findContentsParams) (c
 		return
 	}
 
-	resp, err := cl.HTTP.Do(req)
+	resp, err := cl.requestCached(req)
 	if err != nil {
 		return
 	}
@@ -158,6 +204,14 @@ func (cl Client) findContents(ctx context.Context, params findContentsParams) (c
 	return
 }
 
+func (cl Client) Discover(ctx context.Context, params tv.DiscoverParams) (contents []tv.Content, err error) {
+	return cl.discoverContents(ctx, discoverContentsParams{
+		page: params.Page,
+		kind: params.Kind,
+		lang: params.Lang,
+	})
+}
+
 func (cl Client) DiscoverMovies(ctx context.Context, params tv.DiscoverMoviesParams) (movies []tv.Movie, err error) {
 	contents, err := cl.discoverContents(ctx, discoverContentsParams{
 		page: params.Page,
@@ -184,9 +238,13 @@ func (cl Client) discoverContents(ctx context.Context, params discoverContentsPa
 	if params.page == 0 {
 		params.page = 1
 	}
+	if params.lang == "" {
+		params.lang = cl.DefaultLang
+	}
 
 	form := url.Values{}
 	form.Set("page", fmt.Sprint(params.page))
+	form.Set("language", params.lang)
 
 	header := http.Header{}
 	header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
@@ -201,7 +259,7 @@ func (cl Client) discoverContents(ctx context.Context, params discoverContentsPa
 		return
 	}
 
-	resp, err := cl.HTTP.Do(req)
+	resp, err := cl.requestCached(req)
 	if err != nil {
 		return
 	}
@@ -265,7 +323,7 @@ func (cl Client) findContentDetails(ctx context.Context, id, kind string) (doc *
 		return
 	}
 
-	resp, err := cl.HTTP.Do(req)
+	resp, err := cl.requestCached(req)
 	if err != nil {
 		return
 	}
