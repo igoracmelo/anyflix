@@ -55,15 +55,16 @@ func TestDiscoverMovies(t *testing.T) {
 
 	cl := tmdb.DefaultClient()
 
-	movies, err := cl.DiscoverMovies(context.Background(), tv.DiscoverMoviesParams{
+	movies, err := cl.Discover(context.Background(), tv.DiscoverParams{
 		Page: 1,
+		Kind: "movie",
 	})
 
 	th.Assert.Equal(t, err, nil)
 	th.Assert.True(t, len(movies) > 0, "no movies found")
 
 	for _, movie := range movies {
-		assertValidContent(t, movie.Content)
+		assertValidContent(t, movie)
 	}
 }
 
@@ -72,15 +73,16 @@ func TestDiscoverShows(t *testing.T) {
 
 	cl := tmdb.DefaultClient()
 
-	shows, err := cl.DiscoverShows(context.Background(), tv.DiscoverShowsParams{
+	shows, err := cl.Discover(context.Background(), tv.DiscoverParams{
 		Page: 1,
+		Kind: "tv",
 	})
 
 	th.Assert.Equal(t, err, nil)
 	th.Assert.True(t, len(shows) > 0, "no shows found")
 
 	for _, show := range shows {
-		assertValidContent(t, show.Content)
+		assertValidContent(t, show)
 	}
 }
 

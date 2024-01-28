@@ -2,6 +2,8 @@ package tv
 
 import (
 	"context"
+
+	"github.com/igoracmelo/anyflix/opt"
 )
 
 type API interface {
@@ -14,18 +16,13 @@ type API interface {
 	FindShowDetails(ctx context.Context, id string) (show ShowDetails, err error)
 }
 
-type Opt[T any] struct {
-	Value T
-	Ok    bool
-}
-
 type Content struct {
-	ID            string
-	Kind          string
-	Title         string
-	ReleaseDate   string
-	RatingPercent int
-	PosterURL     string
+	ID            string `json:"id"`
+	Kind          string `json:"kind"`
+	Title         string `json:"title"`
+	ReleaseDate   string `json:"releaseDate"`
+	RatingPercent int    `json:"ratingPercent"`
+	PosterURL     string `json:"posterUrl"`
 }
 
 type Movie struct {
@@ -55,19 +52,21 @@ type ShowDetails struct {
 }
 
 type DiscoverParams struct {
-	Page      int
-	Kind      string
-	Lang      string
-	MinRating Opt[int]
-	MaxRating Opt[int]
+	Page           int
+	Kind           string
+	Lang           string
+	SortBy         string
+	Certifications []string
+	VoteAvgGTE     opt.Opt[int]
+	VoteAvgLTE     opt.Opt[int]
 }
 
 type DiscoverMoviesParams struct {
-	Page int
+	DiscoverParams
 }
 
 type DiscoverShowsParams struct {
-	Page int
+	DiscoverParams
 }
 
 type FindMoviesParams struct {

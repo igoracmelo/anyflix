@@ -18,14 +18,7 @@ func main() {
 		TV: tmdb.DefaultClient(),
 	}
 	mux := chi.NewMux()
-
-	mux.Get("/", h.Index)
-	mux.Get("/contents", h.Contents)
-	mux.Get("/contents/{id}", h.Content)
-	mux.Get("/public/*", h.Public)
-	mux.Get("/watch/{id}", h.Watch)
-	mux.Get("/stream/{id}", h.Stream)
-	mux.Get("/api/discover/{kind}/{page}", h.APIDiscover)
+	h.BindRoutes(mux)
 
 	server := http.Server{
 		Handler: mux,

@@ -5,98 +5,277 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ "TODO" }}</title>
-    <script src="/public/js/htmx.min.js"></script>
+    <script defer src="/public/js/htmx.min.js"></script>
+    <script defer src="/public/js/alpine-intersect.min.js"></script>
+    <script defer src="/public/js/alpine.min.js"></script>
     <link rel="stylesheet" href="/public/css/global.css">
 </head>
 
+<style>
+.app {
+    padding: 20px 50px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+}
+
+@media screen and (max-width: 700px) {
+    .app {
+        padding: 10px 20px;
+    }
+}
+
+.heading {
+    text-align: center;
+    padding: 20px 0;
+}
+
+h2 {
+    padding: 15px 0;
+}
+
+.hr {
+    display: block;
+    width: 100%;
+    height: 2px;
+    min-height: 2px;
+    margin: 20px 0;
+    background-color: #ccc1;
+}
+
+.contents {
+    /* margin: 20px 0; */
+    width: 100%;
+    height: 420px;
+    min-height: 420px;
+    display: flex;
+    gap: 10px;
+    overflow-y: hidden;
+    overflow-x: scroll;
+}
+
+.content {
+    position: relative;
+    /* min-height: 85px; */
+    width: 250px;
+    min-width: 250px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    /* justify-content: space-between; */
+    gap: 10px;
+    cursor: pointer;
+    position: relative;
+}
+
+.content .rating {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+}
+
+.content .img {
+    flex-grow: 1;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center center;
+    border-radius: 10px;
+}
+
+.content_title {
+    padding: 10px 0;
+    font-size: 14px;
+}
+
+.infinity-scroll {
+    display: block;
+    width: 1px;
+    height: 1px;
+}
+
+input {
+    color: black;
+    padding: 5px;
+}
+
+.filters {
+    display: flex;
+    overflow-x: scroll;
+    align-items: center;
+    gap: 8px;
+    min-height: 60px;
+}
+
+.filters .spacing {
+    flex-grow: 1;
+}
+
+.filters .rating {
+    width: 40px;
+    text-align: center;
+    color: white;
+    background-color: transparent;
+    border: 2px solid #fffa;
+    border-radius: 6px;
+}
+
+.filters .btn-filter {
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
+    background-color: rgba(190, 119, 207, 0.7);
+    padding: 8px 20px;
+    border: none;
+    border-radius: 100px;
+}
+
+.certification {
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    border-radius: 5px;
+    display: grid;
+    place-items: center;
+    font-weight: bold;
+    opacity: 0.5;
+}
+
+.certification:hover {
+    opacity: 0.9;
+}
+
+.certification.checked {
+    opacity: 1;
+    border: 2px solid #fffa;
+}
+
+.certification.green {
+    background-color: #af6c;
+}
+
+.certification.blue {
+    background-color: #6afc;
+}
+
+.certification.yellow {
+    background-color: #ff6c;
+}
+
+.certification.orange {
+    background-color: #fa6c;
+}
+
+.certification.red {
+    background-color: #f66c;
+}
+
+.certification.black {
+    background-color: #333c;
+}
+</style>
+
 <body>
-    <style>
-        .app {
-            padding: 20px 50px;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            /* flex-wrap: wrap; */
-        }
-        .heading {
-            text-align: center;
-            padding: 20px 0;
-        }
-        h2 {
-            padding: 15px 0;
-        }
-        .hr {
-            display: block;
-            width: 100%;
-            height: 2px;
-            min-height: 2px;
-            margin: 20px 0;
-            background-color: #ccc1;
-        }
-        .contents {
-            /* margin: 20px 0; */
-            width: 100%;
-            height: 420px;
-            min-height: 420px;
-            display: flex;
-            gap: 10px;
-            overflow-y: hidden;
-            overflow-x: scroll;
-        }
-        .content {
-            /* min-height: 85px; */
-            width: 250px;
-            min-width: 250px;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            text-align: center;
-            /* justify-content: space-between; */
-            gap: 10px;
-            cursor: pointer;
-            position: relative;
-        }
-        .content .img {
-            flex-grow: 1;
-            background-repeat: no-repeat;
-            background-size: cover;
-            background-position: center center;
-            border-radius: 10px;
-        }
-        .content_title {
-            padding: 10px 0;
-            font-size: 14px;
-        }
-        .infinity-scroll {
-            display: block;
-            width: 1px;
-            height: 1px;
-        }
-        input {
-            color: black;
-            padding: 5px;
-        }
-    </style>
-    <div class="app">
+    <div class="app" x-data="data()">
         <h1 class="heading">Popular contents</h1>
 
         <form class="filters">
-            <!-- <input type="range" name="rating" min="0" max="100" value="0"> -->
             <div>Rating:</div>
-            <input type="number" name="min_rating" value="0" min="0" max="100">
-            <input type="number" name="max_rating" value="100" min="0" max="100">
-            <input type="submit" value="filter">
+            <input class="rating" type="number" name="vote_average.gte" value="{{ .VoteAvgGTE }}" min="0" max="10">
+            <input class="rating" type="number" name="vote_average.lte" value="{{ .VoteAvgLTE }}" min="0" max="10">
+            <div class="spacing"></div>
+
+            <div>Certifications:</div>
+            {{ range .Certifications }}
+            <div x-data="{ checked: {{ .Checked }} }">
+                <label
+                    for="input-{{ .Value }}"
+                    :class="['certification', checked ? 'checked' : '', '{{ .Color }}']"
+                >
+                    {{ .Value }}
+                </label>
+                <input
+                    id="input-{{ .Value }}"
+                    style="display: none"
+                    type="checkbox"
+                    name="certification"
+                    value="{{ .Value }}"
+                    x-model="checked"
+                >
+            </div>
+            {{ end }}
+
+            <div class="spacing"></div>
+
+            <select name="sort_by">
+                {{ range .SortByOptions }}
+                <option value="{{ .Value }}" {{ if .Selected }} selected {{ end }}>{{ .Label }}</option>
+                {{ end}}
+            </select>
+
+            <div class="spacing"></div>
+
+            <input class="btn-filter" type="submit" value="filter">
         </form>
 
         <hr class="hr">
         <h2>Movies</h2>
-        <div class="contents" hx-get="{{ .MoviesURL }}" hx-trigger="load"></div>
+        <div class="contents" x-init="loadMoreMovies">
+            <template x-for="movie in movies" :key="movie.id">
+                <a class="content" :href="`/content/${movie.kind}/${movie.id}`">
+                    <div class="img" :style="`background-image: url('${movie.posterUrl || defaultPosterUrl}');`"></div>
+                    <h3 class="content_title" x-text="movie.title"></h3>
+                </a>
+            </template>
+            <template x-if="movies.length > 0">
+                <div x-intersect="loadMoreMovies" class="infinity-scroll"></div>
+            </template>
+        </div>
 
         <hr class="hr">
 
         <h2>TV Shows</h2>
-        <div class="contents" hx-get="{{ .ShowsURL }}" hx-trigger="load"></div>
+        <div class="contents" x-init="loadMoreShows">
+            <template x-for="show in shows" :key="show.id">
+                <a class="content" :href="`/content/${show.kind}/${show.id}`">
+                    <div class="img" :style="`background-image: url('${show.posterUrl || defaultPosterUrl}');`"></div>
+                    <h3 class="content_title" x-text="show.title"></h3>
+                </a>
+            </template>
+            <template x-if="shows.length > 0">
+                <div x-intersect="loadMoreShows" class="infinity-scroll"></div>
+            </template>
+        </div>
     </div>
+
+    <script src="/public/js/main.js"></script>
+    <script>
+        function data() {
+            return {
+                defaultPosterUrl: 'https://placehold.co/240x320?text=No%20cover',
+                minRating: 0,
+                maxRating: 10,
+                movies: [],
+                moviePage: 1,
+                async loadMoreMovies() {
+                    let newMovies = await (await fetch(`/api/discover/movie/${this.moviePage}${location.search}`)).json()
+                    this.movies = this.movies.concat(newMovies)
+                    this.moviePage++
+                },
+                shows: [],
+                showPage: 1,
+                async loadMoreShows() {
+                    let newShows = await (await fetch(`/api/discover/tv/${this.showPage}${location.search}`)).json()
+                    this.shows = this.shows.concat(newShows)
+                    this.showPage++
+                },
+            }
+        }
+    </script>
 </body>
 
 </html>

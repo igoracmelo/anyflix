@@ -138,9 +138,10 @@ func (cl Client) findContents(ctx context.Context, params findContentsParams) (c
 		params.page = 1
 	}
 	if params.title == "" {
-		return cl.discoverContents(ctx, discoverContentsParams{
-			page: params.page,
-			kind: params.kind,
+		return cl.Discover(ctx, tv.DiscoverParams{
+			Page: params.page,
+			Kind: params.kind,
+			Lang: params.lang,
 		})
 	}
 	if params.lang == "" {
@@ -205,53 +206,32 @@ func (cl Client) findContents(ctx context.Context, params findContentsParams) (c
 }
 
 func (cl Client) Discover(ctx context.Context, params tv.DiscoverParams) (contents []tv.Content, err error) {
-	return cl.discoverContents(ctx, discoverContentsParams{
-		page: params.Page,
-		kind: params.Kind,
-		lang: params.Lang,
-	})
-}
-
-func (cl Client) DiscoverMovies(ctx context.Context, params tv.DiscoverMoviesParams) (movies []tv.Movie, err error) {
-	contents, err := cl.discoverContents(ctx, discoverContentsParams{
-		page: params.Page,
-		kind: "movie",
-	})
-	for _, c := range contents {
-		movies = append(movies, tv.Movie{Content: c})
+	if params.Page == 0 {
+		params.Page = 1
 	}
-	return
-}
-
-func (cl Client) DiscoverShows(ctx context.Context, params tv.DiscoverShowsParams) (movies []tv.Show, err error) {
-	contents, err := cl.discoverContents(ctx, discoverContentsParams{
-		page: params.Page,
-		kind: "tv",
-	})
-	for _, c := range contents {
-		movies = append(movies, tv.Show{Content: c})
-	}
-	return
-}
-
-func (cl Client) discoverContents(ctx context.Context, params discoverContentsParams) (contents []tv.Content, err error) {
-	if params.page == 0 {
-		params.page = 1
-	}
-	if params.lang == "" {
-		params.lang = cl.DefaultLang
+	if params.Lang == "" {
+		params.Lang = cl.DefaultLang
 	}
 
 	form := url.Values{}
-	form.Set("page", fmt.Sprint(params.page))
-	form.Set("language", params.lang)
+	form.Set("page", fmt.Sprint(params.Page))
+	form.Set("language", params.Lang)
+	form.Set("vote_average.gte", params.VoteAvgGTE.String())
+	form.Set("vote_average.lte", params.VoteAvgLTE.String())
+	// form.Set("certification", "NR|G|PG|PG-13|R")
+	form.Set("region", "")
+	form.Set("certification", strings.Join(params.Certifications, "|"))
+	form.Set("certification_country", "BR")
+	form.Set("sort_by", params.SortBy)
+	x := form.Encode()
+	_ = x
 
 	header := http.Header{}
 	header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
 
 	req, err := cl.newRequest(ctx, newRequestParams{
 		method: "POST",
-		path:   "/discover/" + params.kind,
+		path:   "/discover/" + params.Kind,
 		header: header,
 		body:   strings.NewReader(form.Encode()),
 	})
@@ -278,12 +258,13 @@ func (cl Client) discoverContents(ctx context.Context, params discoverContentsPa
 	doc.Find(".media_items .card:not(.filler)").Each(func(i int, s *goquery.Selection) {
 		c := tv.Content{}
 		c.ID = s.Find(".options").AttrOr("data-id", "")
-		c.Kind = params.kind
+		c.Kind = params.Kind
 		c.Title = s.Find("h2").Text()
 		c.ReleaseDate = s.Find("p").Text()
 
 		posterSrc := s.Find("img").AttrOr("src", "")
 		if posterSrc != "" {
+			posterSrc = regexp.MustCompile(`/t/p/.*?/`).ReplaceAllString(posterSrc, "/t/p/w300_and_h450_bestv2/")
 			c.PosterURL = posterSrc
 			if strings.HasPrefix(c.PosterURL, "/") {
 				c.PosterURL = cl.BaseURL + c.PosterURL
@@ -299,6 +280,33 @@ func (cl Client) discoverContents(ctx context.Context, params discoverContentsPa
 		contents = append(contents, c)
 	})
 
+	return
+
+}
+
+func (cl Client) DiscoverMovies(ctx context.Context, params tv.DiscoverMoviesParams) (movies []tv.Movie, err error) {
+	contents, err := cl.Discover(ctx, tv.DiscoverParams{
+		Page:       params.Page,
+		Kind:       "movie",
+		Lang:       params.Lang,
+		VoteAvgGTE: params.VoteAvgGTE,
+	})
+	for _, c := range contents {
+		movies = append(movies, tv.Movie{Content: c})
+	}
+	return
+}
+
+func (cl Client) DiscoverShows(ctx context.Context, params tv.DiscoverShowsParams) (movies []tv.Show, err error) {
+	contents, err := cl.Discover(ctx, tv.DiscoverParams{
+		Page:       params.Page,
+		Kind:       "tv",
+		Lang:       params.Lang,
+		VoteAvgGTE: params.VoteAvgGTE,
+	})
+	for _, c := range contents {
+		movies = append(movies, tv.Show{Content: c})
+	}
 	return
 }
 
