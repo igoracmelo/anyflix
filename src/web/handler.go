@@ -109,7 +109,7 @@ func (h Handler) Contents(w http.ResponseWriter, r *http.Request) {
 
 	err := tmpl.Execute(w, map[string]any{
 		"VoteAvgGTE":     opt.ParseInt(q.Get("vote_average.gte")).Or(0),
-		"VoteAvgLTE":     opt.ParseInt(q.Get("vote_average.lte")).Or(0),
+		"VoteAvgLTE":     opt.ParseInt(q.Get("vote_average.lte")).Or(10),
 		"SortByOptions":  sortByOptions,
 		"Certifications": certifications,
 		"MoviesURL":      "/api/discover/movie/1?" + q.Encode(),
