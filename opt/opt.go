@@ -32,6 +32,14 @@ func ParseInt(s string) Opt[int] {
 	}
 }
 
+func ParseFloat(s string) Opt[float64] {
+	f, err := strconv.ParseFloat(s, 64)
+	return Opt[float64]{
+		Value: f,
+		Ok:    err == nil,
+	}
+}
+
 func String(s string) Opt[string] {
 	return Opt[string]{
 		Value: s,

@@ -6,17 +6,18 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"log/slog"
 	"math"
 	"net/http"
 	"net/http/httputil"
-	"net/url"
+	urlpkg "net/url"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/igoracmelo/anyflix/opt"
 	"github.com/igoracmelo/anyflix/src/cache"
 	"github.com/igoracmelo/anyflix/src/errorutil"
 	"github.com/igoracmelo/anyflix/src/tv"
@@ -26,8 +27,7 @@ var DefaultUserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTM
 
 // Client implements tv.API interface
 type Client struct {
-	Cache       cache.Cache[string, []byte]
-	CacheTTL    time.Duration
+	Cache       cache.FileCache
 	DefaultLang string
 	BaseURL     string
 	UserAgent   string
@@ -38,8 +38,7 @@ var _ tv.API = Client{}
 
 func DefaultClient() Client {
 	return Client{
-		Cache:       cache.New[string, []byte](),
-		CacheTTL:    1 * time.Hour,
+		Cache:       cache.NewFileCache(os.TempDir(), 1*time.Hour),
 		DefaultLang: "pt-BR",
 		BaseURL:     "https://www.themoviedb.org",
 		UserAgent:   DefaultUserAgent,
@@ -53,10 +52,12 @@ func (cl Client) newRequest(ctx context.Context, params newRequestParams) (req *
 	}
 
 	url := cl.BaseURL + params.path
-	q := params.query.Encode()
-	if q != "" {
-		url += "?" + q
+	if !params.query.Has("lang") {
+		params.query.Set("lang", cl.DefaultLang)
 	}
+
+	q := params.query.Encode()
+	url += "?" + q
 
 	req, err = http.NewRequestWithContext(ctx, params.method, url, params.body)
 	if err != nil {
@@ -70,18 +71,13 @@ func (cl Client) newRequest(ctx context.Context, params newRequestParams) (req *
 }
 
 func (cl Client) requestCached(req *http.Request) (*http.Response, error) {
-	if cl.CacheTTL == 0 || req.Method != "GET" {
-		return cl.HTTP.Do(req)
-	}
-
-	b, err := httputil.DumpRequest(req, false)
+	b, err := httputil.DumpRequest(req, true)
 	if err != nil {
 		return nil, err
 	}
 	sReq := string(b)
 
-	if bResp, ok := cl.Cache.Get(sReq); ok {
-		slog.Info("reading from cache")
+	if bResp, err := cl.Cache.Get(sReq); err == nil {
 		return http.ReadResponse(bufio.NewReader(bytes.NewReader(bResp)), req)
 	}
 
@@ -100,7 +96,7 @@ func (cl Client) requestCached(req *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 
-	cl.Cache.Set(sReq, bResp, cl.CacheTTL)
+	err = cl.Cache.Set(sReq, bResp)
 
 	return resp, err
 }
@@ -148,10 +144,10 @@ func (cl Client) findContents(ctx context.Context, params findContentsParams) (c
 		params.lang = cl.DefaultLang
 	}
 
-	q := url.Values{}
+	q := urlpkg.Values{}
 	q.Set("query", params.title)
 	q.Set("page", fmt.Sprint(params.page))
-	q.Set("language", cl.DefaultLang)
+	q.Set("language", params.lang)
 
 	req, err := cl.newRequest(ctx, newRequestParams{
 		method: "GET",
@@ -192,12 +188,10 @@ func (cl Client) findContents(ctx context.Context, params findContentsParams) (c
 		c.RatingPercent = -1
 		c.ReleaseDate = s.Find(".release_date").First().Text()
 		posterSrc := s.Find(".poster img").First().AttrOr("src", "")
-		posterSrc = regexp.MustCompile(`/t/p/.*?/`).ReplaceAllString(posterSrc, "/t/p/w300_and_h450_bestv2/")
-		if posterSrc != "" {
-			c.PosterURL = posterSrc
-			if strings.HasPrefix(c.PosterURL, "/") {
-				c.PosterURL = cl.BaseURL + c.PosterURL
-			}
+		c.PosterURL, err = cl.sanitizeImgURL(posterSrc, "w300_and_h450_bestv2")
+		if err != nil {
+			log.Print(err)
+			err = nil
 		}
 		contents = append(contents, c)
 	})
@@ -213,9 +207,9 @@ func (cl Client) Discover(ctx context.Context, params tv.DiscoverParams) (conten
 		params.Lang = cl.DefaultLang
 	}
 
-	form := url.Values{}
+	form := urlpkg.Values{}
 	form.Set("page", fmt.Sprint(params.Page))
-	form.Set("language", params.Lang)
+	form.Set("language", opt.String(params.Lang).Or(cl.DefaultLang))
 	form.Set("vote_average.gte", params.VoteAvgGTE.String())
 	form.Set("vote_average.lte", params.VoteAvgLTE.String())
 	// form.Set("certification", "NR|G|PG|PG-13|R")
@@ -263,12 +257,10 @@ func (cl Client) Discover(ctx context.Context, params tv.DiscoverParams) (conten
 		c.ReleaseDate = s.Find("p").Text()
 
 		posterSrc := s.Find("img").AttrOr("src", "")
-		if posterSrc != "" {
-			posterSrc = regexp.MustCompile(`/t/p/.*?/`).ReplaceAllString(posterSrc, "/t/p/w300_and_h450_bestv2/")
-			c.PosterURL = posterSrc
-			if strings.HasPrefix(c.PosterURL, "/") {
-				c.PosterURL = cl.BaseURL + c.PosterURL
-			}
+		c.PosterURL, err = cl.sanitizeImgURL(posterSrc, "w300_and_h450_bestv2")
+		if err != nil {
+			log.Print(err)
+			err = nil
 		}
 
 		perc, err := strconv.ParseFloat(s.Find(".user_score_chart").AttrOr("data-percent", ""), 64)
@@ -310,22 +302,13 @@ func (cl Client) DiscoverShows(ctx context.Context, params tv.DiscoverShowsParam
 	return
 }
 
-func (cl Client) FindMovieDetails(ctx context.Context, id string) (movie tv.MovieDetails, err error) {
-	_, content, err := cl.findContentDetails(ctx, id, "movie")
-	movie.ContentDetails = content
-	return
-}
-
-func (cl Client) FindShowDetails(ctx context.Context, id string) (show tv.ShowDetails, err error) {
-	_, content, err := cl.findContentDetails(ctx, id, "tv")
-	show.ContentDetails = content
-	return
-}
-
-func (cl Client) findContentDetails(ctx context.Context, id, kind string) (doc *goquery.Document, content tv.ContentDetails, err error) {
+func (cl Client) Details(ctx context.Context, params tv.DetailsParams) (details tv.ContentDetails, err error) {
 	req, err := cl.newRequest(ctx, newRequestParams{
 		method: "GET",
-		path:   fmt.Sprintf("/%s/%s", kind, id),
+		path:   "/" + params.Kind + "/" + params.ID,
+		query: urlpkg.Values{
+			"language": {params.Lang},
+		},
 	})
 	if err != nil {
 		return
@@ -337,49 +320,51 @@ func (cl Client) findContentDetails(ctx context.Context, id, kind string) (doc *
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
-		err = errorutil.NewRequestError(req, resp)
-		return
-	}
-
-	doc, err = goquery.NewDocumentFromReader(resp.Body)
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
 		return
 	}
 
 	headerEl := doc.Find("#original_header").First()
 
-	content.Kind = kind
+	details.Kind = params.Kind
+	details.ID = params.ID
+	details.Title = headerEl.Find("h2 a").First().Text()
+	details.ReleaseDate = headerEl.Find("release").First().Text()
 
-	content.ID = id
-	content.Title = headerEl.Find("h2 a").First().Text()
+	sRating := headerEl.Find(".user_score_chart").First().AttrOr("data-percent", "")
+	details.RatingPercent = int(opt.ParseFloat(sRating).Or(-1))
 
-	img := headerEl.Find("img.poster").First()
-	imgHref := img.AttrOr("data-src", "")
-	if imgHref != "" {
-		content.PosterURL = cl.BaseURL + imgHref
+	posterSrc := headerEl.Find("img.poster").First().AttrOr("data-src", "")
+	details.PosterURL, err = cl.sanitizeImgURL(posterSrc, "w300_and_h450_bestv2")
+	if err != nil {
+		return
 	}
 
-	content.Overview = strings.TrimSpace(headerEl.Find(".overview").Text())
-
-	content.ReleaseDate = headerEl.Find(".release").First().Text()
+	details.Overview = strings.TrimSpace(headerEl.Find(".overview").Text())
 
 	headerEl.Find(".profile").Each(func(i int, s *goquery.Selection) {
 		character := s.Find(".character").First().Text()
 		if strings.Contains(character, "Director") {
-			content.Directors = append(content.Directors, s.Find("a").First().Text())
+			details.Directors = append(details.Directors, s.Find("a").First().Text())
 		}
 	})
+
+	details.ReleaseDate = strings.TrimSpace(headerEl.Find(".release").Text())
 
 	sYear := headerEl.Find(".release_date").Text()
 	sYear = strings.Trim(sYear, "()")
 	if sYear != "" {
-		content.ReleaseYear, err = strconv.Atoi(sYear)
+		details.ReleaseYear, err = strconv.Atoi(sYear)
 		if err != nil {
 			log.Print(err)
 			err = nil
 		}
 	}
+
+	headerEl.Find(".genres a").Each(func(i int, s *goquery.Selection) {
+		details.Genres = append(details.Genres, s.Text())
+	})
 
 	style := doc.Find("#main style").First().Text()
 
@@ -390,9 +375,76 @@ func (cl Client) findContentDetails(ctx context.Context, id, kind string) (doc *
 	m := re.FindStringSubmatch(headerStyle)
 	if len(m) >= 2 {
 		url := m[1]
-		re = regexp.MustCompile(`/t/p/.*?/`)
-		content.BackdropURL = re.ReplaceAllString(url, "/t/p/original/")
-		content.BackdropURL = cl.BaseURL + content.BackdropURL
+		details.BackdropURL, err = cl.sanitizeImgURL(url, "original")
+		if err != nil {
+			log.Print(err)
+			err = nil
+		}
 	}
+
+	m = regexp.MustCompile(`--primaryColor: (.*?);`).FindStringSubmatch(style)
+	if len(m) >= 2 {
+		details.ColorPrimary = m[1]
+	}
+
+	m = regexp.MustCompile(`--primaryColorContrast: (.*?);`).FindStringSubmatch(style)
+	if len(m) >= 2 {
+		details.ColorPrimaryContrast = m[1]
+	}
+
 	return
+}
+
+func (cl Client) FindSeasons(ctx context.Context, params tv.FindSeasonsParams) (seasons []tv.Season, err error) {
+	req, err := cl.newRequest(ctx, newRequestParams{
+		method: "GET",
+		path:   "/tv/" + params.ID + "/seasons",
+		query: urlpkg.Values{
+			"language": {params.Lang},
+		},
+	})
+	if err != nil {
+		return
+	}
+
+	resp, err := cl.requestCached(req)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return
+	}
+
+	doc.Find(".season_wrapper").Each(func(i int, s *goquery.Selection) {
+		season := tv.Season{}
+		season.Title = s.Find("h2").First().Text()
+		seasons = append(seasons, season)
+	})
+
+	return
+}
+
+func (cl Client) FindEpisodes(ctx context.Context, params tv.FindEpisodesParams) (episodes []tv.Episode, err error) {
+	// cl.newRequest(ctx, newRequestParams{
+	// 	method: "GET",
+	// 	path:   "/tv/" + params.ShowID + "/season/" + params.SeasonID,
+	// })
+	return
+}
+
+func (cl Client) sanitizeImgURL(url string, kind string) (string, error) {
+	url = regexp.MustCompile(`/t/p/.*?/`).ReplaceAllString(url, "/t/p/"+kind+"/")
+	if url == "" {
+		return "", nil
+	}
+	if strings.HasPrefix(url, "/") {
+		url = cl.BaseURL + url
+	}
+	if _, err := urlpkg.Parse(url); err != nil {
+		return "", err
+	}
+	return url, nil
 }

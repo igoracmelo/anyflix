@@ -34,26 +34,6 @@ func (h Handler) Contents(w http.ResponseWriter, r *http.Request) {
 
 	q := r.URL.Query()
 
-	// movies, err := h.TV.Discover(r.Context(), tv.DiscoverParams{
-	// 	Page: 1,
-	// 	Kind: "movie",
-	// 	Lang: q.Get("lang"),
-	// })
-	// if err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
-
-	// shows, err := h.TV.Discover(r.Context(), tv.DiscoverParams{
-	// 	Page: 1,
-	// 	Kind: "tv",
-	// 	Lang: q.Get("lang"),
-	// })
-	// if err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
-
 	certifications := []struct {
 		Value   string
 		Color   string
@@ -92,6 +72,9 @@ func (h Handler) Contents(w http.ResponseWriter, r *http.Request) {
 	sortBy := opt.String(q.Get("sort_by")).Or("popularity.desc")
 	q.Set("sort_by", sortBy)
 
+	lang := opt.String(q.Get("lang")).Or("pt-BR")
+	q.Set("lang", lang)
+
 	sortByOptions := []struct {
 		Value    string
 		Label    string
@@ -122,7 +105,42 @@ func (h Handler) Contents(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h Handler) Content(w http.ResponseWriter, r *http.Request) {}
+func (h Handler) Content(w http.ResponseWriter, r *http.Request) {
+	tmpl := Template.MustLoad("tmpl/page.content.html")
+	q := r.URL.Query()
+
+	details, err := h.TV.Details(r.Context(), tv.DetailsParams{
+		ID:   chi.URLParam(r, "id"),
+		Kind: chi.URLParam(r, "kind"),
+		Lang: q.Get("lang"),
+	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var seasons []tv.Season
+
+	if details.Kind == "tv" {
+		seasons, err = h.TV.FindSeasons(r.Context(), tv.FindSeasonsParams{
+			ID:   details.ID,
+			Lang: q.Get("lang"),
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	err = tmpl.Execute(w, map[string]any{
+		"Details": details,
+		"Seasons": seasons,
+	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
 
 func (h Handler) Public(w http.ResponseWriter, r *http.Request) {
 	http.StripPrefix("/public/", http.FileServer(http.FS(PublicFS))).ServeHTTP(w, r)

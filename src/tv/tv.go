@@ -7,13 +7,16 @@ import (
 )
 
 type API interface {
-	FindMovies(ctx context.Context, params FindMoviesParams) (movies []Movie, err error)
-	FindShows(ctx context.Context, params FindShowsParams) (shows []Show, err error)
+	// FindMovies(ctx context.Context, params FindMoviesParams) (movies []Movie, err error)
+	// FindShows(ctx context.Context, params FindShowsParams) (shows []Show, err error)
 	Discover(ctx context.Context, params DiscoverParams) (contents []Content, err error)
-	DiscoverMovies(ctx context.Context, params DiscoverMoviesParams) (movies []Movie, err error)
-	DiscoverShows(ctx context.Context, params DiscoverShowsParams) (shows []Show, err error)
-	FindMovieDetails(ctx context.Context, id string) (movie MovieDetails, err error)
-	FindShowDetails(ctx context.Context, id string) (show ShowDetails, err error)
+	Details(ctx context.Context, params DetailsParams) (details ContentDetails, err error)
+	FindSeasons(ctx context.Context, params FindSeasonsParams) (seasons []Season, err error)
+	FindEpisodes(ctx context.Context, params FindEpisodesParams) (episodes []Episode, err error)
+	// DiscoverMovies(ctx context.Context, params DiscoverMoviesParams) (movies []Movie, err error)
+	// DiscoverShows(ctx context.Context, params DiscoverShowsParams) (shows []Show, err error)
+	// FindMovieDetails(ctx context.Context, id string) (movie MovieDetails, err error)
+	// FindShowDetails(ctx context.Context, id string) (show ShowDetails, err error)
 }
 
 type Content struct {
@@ -38,6 +41,8 @@ type ContentDetails struct {
 	ReleaseYear          int
 	Overview             string
 	Directors            []string
+	Genres               []string
+	Seasons              []any
 	BackdropURL          string
 	ColorPrimary         string
 	ColorPrimaryContrast string
@@ -59,6 +64,31 @@ type DiscoverParams struct {
 	Certifications []string
 	VoteAvgGTE     opt.Opt[int]
 	VoteAvgLTE     opt.Opt[int]
+}
+
+type DetailsParams struct {
+	ID   string
+	Kind string
+	Lang string
+}
+
+type Season struct {
+	Title    string
+	Episodes []Episode
+}
+
+type Episode struct {
+}
+
+type FindSeasonsParams struct {
+	ID   string
+	Lang string
+}
+
+type FindEpisodesParams struct {
+	ShowID   string
+	SeasonID string
+	Lang     string
 }
 
 type DiscoverMoviesParams struct {
