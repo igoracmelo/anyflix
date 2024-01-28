@@ -134,6 +134,18 @@ input {
     border-radius: 100px;
 }
 
+.filters .sort_by {
+    padding: 6px;
+    color: black;
+    background-color: white;
+}
+
+.filters .sort_by option {
+    padding: 10px;
+    color: black;
+    background-color: white;
+}
+
 .certification {
     cursor: pointer;
     width: 30px;
@@ -211,7 +223,8 @@ input {
 
             <div class="spacing"></div>
 
-            <select name="sort_by">
+            Sort by:
+            <select class="sort_by" name="sort_by">
                 {{ range .SortByOptions }}
                 <option value="{{ .Value }}" {{ if .Selected }} selected {{ end }}>{{ .Label }}</option>
                 {{ end}}
