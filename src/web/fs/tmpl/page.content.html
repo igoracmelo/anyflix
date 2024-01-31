@@ -72,6 +72,8 @@
         /* background-color: #0003; */
     }
     .episode {
+        cursor: pointer;
+        opacity: 0.7;
         flex: 0 0 auto;
         width: 300px;
         height: 250px;
@@ -80,27 +82,27 @@
         flex-direction: column;
         gap: 10px;
     }
+    .episode.selected {
+        opacity: 1;
+    }
     .episode_img {
         flex-grow: 1;
         border-radius: 5px;
         background-size: cover;
         background-position: center center;
     }
+    .episode.selected .episode_img {
+        border: 3px solid white;
+    }
+    .episode_title {
+        font-weight: bold;
+    }
+    .episode_date {
+        font-size: 11px;
+    }
     </style>
 
     <div class="app" x-data="data()">
-        <!-- .Details.ID: {{ .Details.ID }}<br> -->
-        <!-- .Details.Kind: {{ .Details.Kind }}<br> -->
-        <!-- .Details.Title: {{ .Details.Title }}<br> -->
-        <!-- .Details.ReleaseDate: {{ .Details.ReleaseDate }}<br> -->
-        <!-- .Details.RatingPercent: {{ .Details.RatingPercent }}<br> -->
-        <!-- .Details.ReleaseYear: {{ .Details.ReleaseYear }}<br> -->
-        <!-- .Details.Overview: {{ .Details.Overview }}<br> -->
-        <!-- .Details.Directors: {{ .Details.Directors }}<br> -->
-        <!-- .Details.Seasons: {{ .Details.Seasons }}<br> -->
-        <!-- .Details.BackdropURL: {{ .Details.BackdropURL }}<br> -->
-        <!-- .Details.ColorPrimary: {{ .Details.ColorPrimary }}<br> -->
-        <!-- .Details.ColorPrimaryContrast: {{ .Details.ColorPrimaryContrast }}<br> -->
         <div class="details">
             <div>
                 <h1 class="title">
@@ -164,7 +166,7 @@
 
             <div class="episodes" x-init="loadEpisodes">
                 <template x-for="ep in episodes" key="seasonId + '-' + ep.number">
-                    <div class="episode">
+                    <div class="episode" :class="{selected: ep.number == episodeNumber}" @click="changeEpisode(ep.number)">
                         <div class="episode_img" :style="`background-image: url('${ep.backdropUrl}')`"></div>
                         <div class="episode_title" x-text="`${ep.number}. ${ep.title}`"></div>
                         <div class="episode_date" x-text="ep.releaseDate"></div>
@@ -179,13 +181,21 @@
         function data() {
             return {
                 seasonId: 1,
+                episodeNumber: 1,
                 episodes: [],
                 async loadEpisodes() {
                     this.episodes = await (await fetch(`/api/tv/{{.Details.ID}}/seasons/${this.seasonId}/episodes${location.search}`)).json()
+                    this.episodeNumber = 1
                 },
                 changeSeason(id) {
                     this.seasonId = id
                     this.loadEpisodes()
+                },
+                changeEpisode(number) {
+                    this.episodeNumber = number
+                },
+                loadWatchOptions() {
+                    let term = `{{.Details.Title}}`
                 }
             }
         }

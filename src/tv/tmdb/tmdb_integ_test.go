@@ -91,7 +91,10 @@ func TestFindMovieDetails(t *testing.T) {
 
 	cl := tmdb.DefaultClient()
 
-	movie, err := cl.FindMovieDetails(context.Background(), "502356")
+	movie, err := cl.Details(context.Background(), tv.DetailsParams{
+		ID:   "502356",
+		Kind: "movie",
+	})
 	th.Assert.Equal(t, err, nil)
 	assertValidContent(t, movie.Content)
 }
@@ -101,7 +104,10 @@ func TestFindShowDetails(t *testing.T) {
 
 	cl := tmdb.DefaultClient()
 
-	show, err := cl.FindShowDetails(context.Background(), "1622")
+	show, err := cl.Details(context.Background(), tv.DetailsParams{
+		ID:   "1622",
+		Kind: "tv",
+	})
 	th.Assert.Equal(t, err, nil)
 	assertValidContent(t, show.Content)
 }

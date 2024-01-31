@@ -475,6 +475,7 @@ func (cl Client) FindEpisodes(ctx context.Context, params tv.FindEpisodesParams)
 
 		episode.Number = s.Find(".episode_number").First().Text()
 		episode.Title = s.Find(".episode_title a").First().Text()
+		episode.ReleaseDate = s.Find("span.date").First().Text()
 		episodes = append(episodes, episode)
 	})
 

@@ -8,11 +8,13 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/igoracmelo/anyflix/opt"
+	"github.com/igoracmelo/anyflix/src/torrents"
 	"github.com/igoracmelo/anyflix/src/tv"
 )
 
 type Handler struct {
-	TV tv.API
+	TV      tv.API
+	Torrent torrents.API
 }
 
 func (h Handler) BindRoutes(mux *chi.Mux) {
@@ -24,6 +26,7 @@ func (h Handler) BindRoutes(mux *chi.Mux) {
 	mux.Get("/stream/{id}", h.Stream)
 	mux.Get("/api/discover/{kind}/{page}", h.APIDiscover)
 	mux.Get("/api/tv/{showID}/seasons/{seasonID}/episodes", h.APIFindEpisodes)
+	mux.Get("/api/{kind}/search", h.APISearchTorrents)
 }
 
 func (h Handler) Index(w http.ResponseWriter, r *http.Request) {
@@ -191,4 +194,36 @@ func (h Handler) APIFindEpisodes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_ = json.NewEncoder(w).Encode(episodes)
+}
+
+func (h Handler) APISearchTorrents(w http.ResponseWriter, r *http.Request) {
+	// var term string
+	// q := r.URL.Query()
+
+	// kind := chi.URLParam(r, "kind")
+	// if kind == "tv" {
+	// 	errs := []error{}
+	// 	season, err := strconv.Atoi(q.Get("season"))
+	// 	errs = append(errs, err)
+	// 	episode, err := strconv.Atoi(q.Get("episode"))
+	// 	errs = append(errs, err)
+
+	// 	err = errors.Join(errs...)
+	// 	if err != nil {
+	// 		http.Error(w, err.Error(), http.StatusBadRequest)
+	// 		return
+	// 	}
+	// 	term = fmt.Sprintf("%s S%02dE%02d", q.Get("title"), q.Get("season"), q.Get("episode"))
+	// } else if kind == "movie" {
+	// 	term = fmt.Sprintf("%s %d", q.Get("title"), q.Get("year"))
+	// } else {
+	// 	http.Error(w, "invalid kind "+kind, http.StatusBadRequest)
+	// 	return
+	// }
+
+	// h.Torrent.Search(r.Context(), torrents.SearchParams{
+	// 	Query: term,
+	// 	Size:  20,
+	// 	Page:  1,
+	// })
 }
