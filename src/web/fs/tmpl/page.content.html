@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>{{ .Details.Title }}</title>
     <link rel="stylesheet" href="/public/css/global.css">
+    <script defer src="/public/js/alpine.min.js"></script>
 </head>
 <body>
     <style>
@@ -15,36 +16,134 @@
         background-repeat: no-repeat;
         background-position: center center;
     }
-    /* .app::after {
-        content: "";
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        z-index: 5;
-        background-color: red;
-        opacity: 0.5;
-    } */
+    .details {
+        padding: 8vw 0;
+        margin: auto;
+        width: min(90vw, 700px);
+        display: flex;
+        flex-direction: column;
+        gap: 20px
+    }
+    .title {
+        display: flex;
+        gap: 12px;
+    }
+    .title :last-child {
+        color: #fffa;
+        font-weight: normal;
+    }
+    .chips {
+        overflow-x: scroll;
+        padding: 5px 0;
+        display: flex;
+        gap: 15px;
+    }
+    .chip {
+        flex: 0 0 auto;
+        padding: 5px 15px;
+        color: black;
+        background-color: beige;
+        border-radius: 100px;
+    }
+    .seasons {
+        padding: 10px 0;
+        display: flex;
+        gap: 60px;
+        overflow-x: scroll;
+    }
+    .season {
+        cursor: pointer;
+        padding: 10px 20px;
+        flex: 0 0 auto;
+    }
+    .season:hover {
+        background-color: #aaa3;
+    }
+    .season.selected {
+        color: beige;
+        font-weight: bold;
+        background-color: #aaa3;
+    }
+    .episodes {
+        display: flex;
+        gap: 50px;
+        overflow-x: scroll;
+        padding: 20px 0;
+        /* background-color: #0003; */
+    }
+    .episode {
+        flex: 0 0 auto;
+        width: 300px;
+        height: 250px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .episode_img {
+        flex-grow: 1;
+        border-radius: 5px;
+        background-size: cover;
+        background-position: center center;
+    }
     </style>
 
-    <div class="app">
+    <div class="app" x-data="data()">
         <!-- .Details.ID: {{ .Details.ID }}<br> -->
         <!-- .Details.Kind: {{ .Details.Kind }}<br> -->
         <!-- .Details.Title: {{ .Details.Title }}<br> -->
-        .Details.ReleaseDate: {{ .Details.ReleaseDate }}<br>
+        <!-- .Details.ReleaseDate: {{ .Details.ReleaseDate }}<br> -->
         <!-- .Details.RatingPercent: {{ .Details.RatingPercent }}<br> -->
-        .Details.PosterURL: {{ .Details.PosterURL }}<br>
         <!-- .Details.ReleaseYear: {{ .Details.ReleaseYear }}<br> -->
         <!-- .Details.Overview: {{ .Details.Overview }}<br> -->
         <!-- .Details.Directors: {{ .Details.Directors }}<br> -->
-        .Details.Seasons: {{ .Details.Seasons }}<br>
+        <!-- .Details.Seasons: {{ .Details.Seasons }}<br> -->
         <!-- .Details.BackdropURL: {{ .Details.BackdropURL }}<br> -->
         <!-- .Details.ColorPrimary: {{ .Details.ColorPrimary }}<br> -->
         <!-- .Details.ColorPrimaryContrast: {{ .Details.ColorPrimaryContrast }}<br> -->
         <div class="details">
-            <h1>
-                <div>{{ .Details.Title }}</div>
-                <div>({{ .Details.ReleaseYear }})</div>
-            </h1>
+            <div>
+                <h1 class="title">
+                    <div>{{ .Details.Title }}</div>
+                    <div>({{ .Details.ReleaseYear }})</div>
+                </h1>
+                {{ if .Details.ReleaseDate }}
+                <div class="release_date">{{ .Details.ReleaseDate }}</div>
+                {{ end }}
+            </div>
+
+
+            {{ if ge .Details.RatingPercent 0 }}
+            <div>
+                <strong>Rating</strong>
+                <div class="chips">
+                    <div class="chip">{{ .Details.RatingPercent }}%</div>
+                </div>
+            </div>
+            {{ end }}
+            <!-- <div>.Details.PosterURL: {{ .Details.PosterURL }}<br></div> -->
+
+            {{ if .Details.Genres }}
+            <div>
+                <strong>Genres</strong>
+                <div class="chips">
+                    {{ range .Details.Genres }}
+                    <div class="chip">{{ . }}</div>
+                    {{ end }}
+                </div>
+            </div>
+            {{ end }}
+
+            {{ if .Details.Directors }}
+            <div>
+                <strong>Directors</strong>
+                <div class="chips">
+                    {{ range .Details.Directors }}
+                    <div class="chip">{{ . }}</div>
+                    {{ end}}
+                </div>
+            </div>
+            {{ end }}
 
             {{ if .Details.Overview }}
             <div>
@@ -53,33 +152,43 @@
             </div>
             {{ end }}
 
-            {{ if .Details.Genres }}
+            {{ if .Details.Seasons }}
             <div>
-                <strong>Genres</strong>
-                {{ range .Details.Genres }}
-                <div>{{ . }}</div>
-                {{ end}}
+                <strong></strong>
+                <div class="seasons">
+                    {{ range .Details.Seasons }}
+                    <div class="season" @click="changeSeason('{{ .Number }}')" :class="{selected: seasonId == '{{ .Number }}'}">{{ .Title }}</div>
+                    {{ end }}
+                </div>
             </div>
-            {{ end }}
 
-            {{ if .Details.Directors }}
-            <div>
-                <strong>Directors</strong>
-                {{ range .Details.Directors }}
-                <div>{{ . }}</div>
-                {{ end}}
-            </div>
-            {{ end }}
-
-            {{ if .Seasons }}
-            <div>
-                <strong>Seasons</strong>
-                {{ range .Seasons }}
-                <div>{{ .Title }}</div>
-                {{ end}}
+            <div class="episodes" x-init="loadEpisodes">
+                <template x-for="ep in episodes" key="seasonId + '-' + ep.number">
+                    <div class="episode">
+                        <div class="episode_img" :style="`background-image: url('${ep.backdropUrl}')`"></div>
+                        <div class="episode_title" x-text="`${ep.number}. ${ep.title}`"></div>
+                        <div class="episode_date" x-text="ep.releaseDate"></div>
+                    </div>
+                </template>
             </div>
             {{ end }}
         </div>
     </div>
+
+    <script>
+        function data() {
+            return {
+                seasonId: 1,
+                episodes: [],
+                async loadEpisodes() {
+                    this.episodes = await (await fetch(`/api/tv/{{.Details.ID}}/seasons/${this.seasonId}/episodes${location.search}`)).json()
+                },
+                changeSeason(id) {
+                    this.seasonId = id
+                    this.loadEpisodes()
+                }
+            }
+        }
+    </script>
 </body>
 </html>

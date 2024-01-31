@@ -42,7 +42,7 @@ type ContentDetails struct {
 	Overview             string
 	Directors            []string
 	Genres               []string
-	Seasons              []any
+	Seasons              []Season
 	BackdropURL          string
 	ColorPrimary         string
 	ColorPrimaryContrast string
@@ -73,11 +73,16 @@ type DetailsParams struct {
 }
 
 type Season struct {
+	Number   int
 	Title    string
 	Episodes []Episode
 }
 
 type Episode struct {
+	Number      string `json:"number"`
+	Title       string `json:"title"`
+	ReleaseDate string `json:"releaseDate"`
+	BackdropURL string `json:"backdropUrl"`
 }
 
 type FindSeasonsParams struct {

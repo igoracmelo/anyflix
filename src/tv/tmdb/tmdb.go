@@ -50,11 +50,14 @@ func (cl Client) newRequest(ctx context.Context, params newRequestParams) (req *
 	if params.header == nil {
 		params.header = http.Header{}
 	}
+	if params.query == nil {
+		params.query = urlpkg.Values{}
+	}
+
+	lang := opt.String(params.query.Get("language")).Or(cl.DefaultLang)
+	params.query.Set("language", lang)
 
 	url := cl.BaseURL + params.path
-	if !params.query.Has("lang") {
-		params.query.Set("lang", cl.DefaultLang)
-	}
 
 	q := params.query.Encode()
 	url += "?" + q
@@ -420,6 +423,17 @@ func (cl Client) FindSeasons(ctx context.Context, params tv.FindSeasonsParams) (
 
 	doc.Find(".season_wrapper").Each(func(i int, s *goquery.Selection) {
 		season := tv.Season{}
+
+		href := s.Find("h2 a").First().AttrOr("href", "")
+		m := regexp.MustCompile(`/tv/.*?/season/(\d+)`).FindStringSubmatch(href)
+		if len(m) >= 2 {
+			season.Number, err = strconv.Atoi(m[1])
+			if err != nil {
+				log.Print(err)
+				return
+			}
+		}
+
 		season.Title = s.Find("h2").First().Text()
 		seasons = append(seasons, season)
 	})
@@ -428,10 +442,42 @@ func (cl Client) FindSeasons(ctx context.Context, params tv.FindSeasonsParams) (
 }
 
 func (cl Client) FindEpisodes(ctx context.Context, params tv.FindEpisodesParams) (episodes []tv.Episode, err error) {
-	// cl.newRequest(ctx, newRequestParams{
-	// 	method: "GET",
-	// 	path:   "/tv/" + params.ShowID + "/season/" + params.SeasonID,
-	// })
+	req, err := cl.newRequest(ctx, newRequestParams{
+		method: "GET",
+		path:   "/tv/" + params.ShowID + "/season/" + params.SeasonID,
+		query: urlpkg.Values{
+			"language": {params.Lang},
+		},
+	})
+	if err != nil {
+		return
+	}
+
+	resp, err := cl.requestCached(req)
+	if err != nil {
+		return
+	}
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return
+	}
+
+	doc.Find(".episode_list .card").Each(func(i int, s *goquery.Selection) {
+		episode := tv.Episode{}
+
+		imgURL := s.Find("img.backdrop").First().AttrOr("src", "")
+		episode.BackdropURL, err = cl.sanitizeImgURL(imgURL, "w500_and_h282_face")
+		if err != nil {
+			log.Print(err)
+			err = nil
+		}
+
+		episode.Number = s.Find(".episode_number").First().Text()
+		episode.Title = s.Find(".episode_title a").First().Text()
+		episodes = append(episodes, episode)
+	})
+
 	return
 }
 

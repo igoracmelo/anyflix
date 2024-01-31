@@ -23,6 +23,7 @@ func (h Handler) BindRoutes(mux *chi.Mux) {
 	mux.Get("/watch/{id}", h.Watch)
 	mux.Get("/stream/{id}", h.Stream)
 	mux.Get("/api/discover/{kind}/{page}", h.APIDiscover)
+	mux.Get("/api/tv/{showID}/seasons/{seasonID}/episodes", h.APIFindEpisodes)
 }
 
 func (h Handler) Index(w http.ResponseWriter, r *http.Request) {
@@ -119,9 +120,8 @@ func (h Handler) Content(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var seasons []tv.Season
-
 	if details.Kind == "tv" {
+		var seasons []tv.Season
 		seasons, err = h.TV.FindSeasons(r.Context(), tv.FindSeasonsParams{
 			ID:   details.ID,
 			Lang: q.Get("lang"),
@@ -130,11 +130,11 @@ func (h Handler) Content(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		details.Seasons = seasons
 	}
 
 	err = tmpl.Execute(w, map[string]any{
 		"Details": details,
-		"Seasons": seasons,
 	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -175,4 +175,20 @@ func (h Handler) APIDiscover(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_ = json.NewEncoder(w).Encode(movies)
+}
+
+func (h Handler) APIFindEpisodes(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+
+	episodes, err := h.TV.FindEpisodes(r.Context(), tv.FindEpisodesParams{
+		ShowID:   chi.URLParam(r, "showID"),
+		SeasonID: chi.URLParam(r, "seasonID"),
+		Lang:     q.Get("lang"),
+	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_ = json.NewEncoder(w).Encode(episodes)
 }
