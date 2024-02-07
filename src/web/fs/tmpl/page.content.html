@@ -167,7 +167,7 @@
             <div class="episodes" x-init="loadEpisodes">
                 <template x-for="ep in episodes" key="seasonId + '-' + ep.number">
                     <div class="episode" :class="{selected: ep.number == episodeNumber}" @click="changeEpisode(ep.number)">
-                        <div class="episode_img" :style="`background-image: url('${ep.backdropUrl}')`"></div>
+                        <div class="episode_img" :style="`background-image: url('${ep.backdropUrl || defaultBackdropUrl}')`"></div>
                         <div class="episode_title" x-text="`${ep.number}. ${ep.title}`"></div>
                         <div class="episode_date" x-text="ep.releaseDate"></div>
                     </div>
@@ -180,6 +180,7 @@
     <script>
         function data() {
             return {
+                defaultBackdropUrl: 'https://placehold.co/300x200?text=No%20backdrop',
                 seasonId: 1,
                 episodeNumber: 1,
                 episodes: [],
